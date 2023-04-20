@@ -59,8 +59,8 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     @Override
-    public void setSingleAttribute(String name, String value)
-    {
+    public void setSingleAttribute(String name, String value) {
+
         if (name.equals("phone")) {
             entity.setPhone(value);
         } else if (name.equals("middle_name")) {
@@ -71,8 +71,8 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     @Override
-    public void removeAttribute(String name)
-    {
+    public void removeAttribute(String name) {
+
         if (name.equals("phone")) {
             entity.setPhone(null);
         } else if (name.equals("middle_name")) {
@@ -83,8 +83,8 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     @Override
-    public void setAttribute(String name, List<String> values)
-    {
+    public void setAttribute(String name, List<String> values) {
+
         if (name.equals("phone")) {
             entity.setPhone(values.get(0));
         } else if (name.equals("middle_name")) {
@@ -95,8 +95,8 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     @Override
-    public String getFirstAttribute(String name)
-    {
+    public String getFirstAttribute(String name) {
+
         if (name.equals("phone")) {
             return entity.getPhone();
         } else if (name.equals("middle_name")) {
@@ -107,8 +107,8 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     @Override
-    public Map<String, List<String>> getAttributes()
-    {
+    public Map<String, List<String>> getAttributes() {
+
         // *****************************************
         log.info(">>>> GEY ATTRIBUTES MAP >>>>");
         // *****************************************
@@ -119,20 +119,6 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         all.add("middle_name", entity.getMiddleName());
         return all;
     }
-
-//    @Override
-//    public List<String> getAttribute(String name) {
-//        List<String> attrs = new LinkedList<>();
-//        if (name.equals("phone")) {
-//            attrs.add(entity.getPhone());
-//            return attrs;
-//        } else if (name.equals("middle_name")) {
-//            attrs.add(entity.getMiddleName());
-//            return attrs;
-//        } else {
-//            return super.getAttribute(name);
-//        }
-//    }
 
     @Override
     public boolean isEnabled() {
@@ -150,6 +136,16 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     @Override
+    public boolean isEmailVerified() {
+        return super.isEmailVerified();
+    }
+
+    @Override
+    public void setEmailVerified(boolean verified) {
+        super.setEmailVerified(verified);
+    }
+
+    @Override
     public Long getCreatedTimestamp() {
         return System.currentTimeMillis();
     }
@@ -158,4 +154,5 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     public void setCreatedTimestamp(Long timestamp) {
         super.setCreatedTimestamp(timestamp);
     }
+
 }
