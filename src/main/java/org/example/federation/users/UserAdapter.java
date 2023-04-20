@@ -9,13 +9,14 @@ import org.keycloak.models.UserModel;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.adapter.AbstractUserAdapterFederatedStorage;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
 public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
+    protected static String ENABLED_TRUE = "ACTIVE";
+    protected static String ENABLED_FALSE = "DELETED";
     protected UserEntity entity;
     protected String keycloakId;
 
@@ -85,18 +86,29 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     @Override
     public void setAttribute(String name, List<String> values) {
 
-        if (name.equals("phone")) {
-            entity.setPhone(values.get(0));
-        } else if (name.equals("middle_name")) {
-            entity.setMiddleName(values.get(0));
-        } else {
-            super.setAttribute(name, values);
+        if (values.isEmpty()) return;
+        switch (name) {
+            case UserModel.LAST_NAME: entity.setLastName(values.get(0)); break;
+            case UserModel.FIRST_NAME: entity.setFirstName(values.get(0)); break;
+            case UserModel.EMAIL: entity.setEmail(values.get(0)); break;
+            case "phone":
+                entity.setPhone(values.get(0));
+                break;
+            case "middle_name":
+                entity.setMiddleName(values.get(0));
+                break;
+            default:
+                setSingleAttribute(name, values.get(0));
+                break;
         }
     }
 
     @Override
     public String getFirstAttribute(String name) {
 
+        // *****************************************
+        log.info(">>>> GEY FIRST ATTRIBUTE >>>>");
+        // *****************************************
         if (name.equals("phone")) {
             return entity.getPhone();
         } else if (name.equals("middle_name")) {
@@ -112,9 +124,21 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         // *****************************************
         log.info(">>>> GEY ATTRIBUTES MAP >>>>");
         // *****************************************
-        Map<String, List<String>> attrs = super.getAttributes();
+//        Map<String, List<String>> attrs = super.getAttributes();
+//        for (Map.Entry entry : attrs.entrySet()) {
+//            System.out.println();
+//            System.out.println("Attribute = " + entry.getKey() + " :: Value = " + entry.getValue());
+//        }
+//        MultivaluedHashMap<String, String> all = new MultivaluedHashMap<>();
+//        all.putAll(attrs);
+
         MultivaluedHashMap<String, String> all = new MultivaluedHashMap<>();
-        all.putAll(attrs);
+
+        all.add(UserModel.USERNAME, entity.getUsername());
+        all.add(UserModel.FIRST_NAME, entity.getFirstName());
+        all.add(UserModel.LAST_NAME, entity.getLastName());
+        all.add(UserModel.EMAIL, entity.getEmail());
+
         all.add("phone", entity.getPhone());
         all.add("middle_name", entity.getMiddleName());
         return all;
@@ -122,15 +146,15 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public boolean isEnabled() {
-        return entity.getStatus().equals("ACTIVE");
+        return entity.getStatus().equals(ENABLED_TRUE);
     }
 
     @Override
     public void setEnabled(boolean enabled) {
         if (enabled) {
-            entity.setStatus("ACTIVE");
+            entity.setStatus(ENABLED_TRUE);
         } else {
-            entity.setStatus("DELETED");
+            entity.setStatus(ENABLED_FALSE);
         }
         super.setEnabled(enabled);
     }
