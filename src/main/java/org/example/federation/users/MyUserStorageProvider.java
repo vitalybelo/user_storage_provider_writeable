@@ -183,8 +183,7 @@ public class MyUserStorageProvider implements
         }
         UserCredentialModel cred = (UserCredentialModel)input;
         UserAdapter adapter = getUserAdapter(user);
-        adapter.setPassword(cred.getValue());
-
+        adapter.setPassword(encoder.encode(cred.getValue()));
         return true;
     }
 

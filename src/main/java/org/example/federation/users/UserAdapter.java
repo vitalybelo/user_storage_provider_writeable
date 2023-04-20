@@ -124,24 +124,17 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         // *****************************************
         log.info(">>>> GEY ATTRIBUTES MAP >>>>");
         // *****************************************
-//        Map<String, List<String>> attrs = super.getAttributes();
-//        for (Map.Entry entry : attrs.entrySet()) {
-//            System.out.println();
-//            System.out.println("Attribute = " + entry.getKey() + " :: Value = " + entry.getValue());
-//        }
-//        MultivaluedHashMap<String, String> all = new MultivaluedHashMap<>();
-//        all.putAll(attrs);
+        MultivaluedHashMap<String, String> attributes = new MultivaluedHashMap<>();
 
-        MultivaluedHashMap<String, String> all = new MultivaluedHashMap<>();
+        attributes.add(UserModel.USERNAME, entity.getUsername());
+        attributes.add(UserModel.FIRST_NAME, entity.getFirstName());
+        attributes.add(UserModel.LAST_NAME, entity.getLastName());
+        attributes.add(UserModel.EMAIL, entity.getEmail());
 
-        all.add(UserModel.USERNAME, entity.getUsername());
-        all.add(UserModel.FIRST_NAME, entity.getFirstName());
-        all.add(UserModel.LAST_NAME, entity.getLastName());
-        all.add(UserModel.EMAIL, entity.getEmail());
+        attributes.add("phone", entity.getPhone());
+        attributes.add("middle_name", entity.getMiddleName());
 
-        all.add("phone", entity.getPhone());
-        all.add("middle_name", entity.getMiddleName());
-        return all;
+        return attributes;
     }
 
     @Override
@@ -171,6 +164,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public Long getCreatedTimestamp() {
+        // TODO - исправить этот метод, нужно возвращать реальную дату создания
         return System.currentTimeMillis();
     }
 
