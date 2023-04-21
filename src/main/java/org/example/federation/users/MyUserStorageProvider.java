@@ -1,6 +1,7 @@
 package org.example.federation.users;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.federation.users.adapter.UserAdapter;
 import org.example.federation.users.encoder.KeycloakBCryptPasswordEncoder;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
@@ -24,13 +25,8 @@ import org.keycloak.storage.user.UserRegistrationProvider;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -175,6 +171,7 @@ public class MyUserStorageProvider implements
         entity.setStatus("ACTIVE");
         entity.setUsername(username);
         entity.setPassword(encoder.encode(username));
+        entity.setCreated(System.currentTimeMillis());
         em.persist(entity);
         log.info(">>>> ADDED USER: {}", username);
         return new UserAdapter(session, realm, model, entity);
@@ -291,21 +288,22 @@ public class MyUserStorageProvider implements
      * --------------------------------------------------------------------------------------------------------------
      */
 
+    /**
+     *
+     * @param realm the realm
+     * @return
+     */
     @Override
     public int getUsersCount(RealmModel realm) {
-        // ********************************************************************
-        System.out.println("\n>>>> GET USERS COUNT >>>>");
-        // ********************************************************************
-
         Object count = em.createNamedQuery("getUserCount").getSingleResult();
         return ((Number)count).intValue();
     }
 
-    public List<UserModel> getUsers(RealmModel realm, int firstResult, int maxResults) {
+    public List<UserEntity> getAllUsers() {
+        return getAllUsers(-1, -1);
+    }
 
-        // ********************************************************************
-        System.out.println("\n>>>> GET USERS FROM DATABASE >>>>");
-        // ********************************************************************
+    public List<UserEntity> getAllUsers(int firstResult, int maxResults) {
 
         TypedQuery<UserEntity> query = em.createNamedQuery("getAllUsers", UserEntity.class);
         if (firstResult != -1) {
@@ -314,76 +312,60 @@ public class MyUserStorageProvider implements
         if (maxResults != -1) {
             query.setMaxResults(maxResults);
         }
-        List<UserEntity> results = query.getResultList();
-        List<UserModel> users = new LinkedList<>();
-        for (UserEntity entity : results) {
-            users.add(new UserAdapter(session, realm, model, entity));
+        return query.getResultList();
+    }
+
+    public List<UserEntity> findUsers(String search, int firstResult, int maxResults) {
+
+        if (search.equalsIgnoreCase("*")) {
+            return getAllUsers(firstResult, maxResults);
         }
-        return users;
+        TypedQuery<UserEntity> query = em.createNamedQuery("searchForUser", UserEntity.class);
+        query.setParameter("search", "%" + search.toLowerCase() + "%");
+        if (firstResult != -1) {
+            query.setFirstResult(firstResult);
+        }
+        if (maxResults != -1) {
+            query.setMaxResults(maxResults);
+        }
+        return query.getResultList();
+    }
+
+    @Override
+    public Stream<UserModel> searchForUserStream(RealmModel realm, String search) {
+        return findUsers(search, -1, -1).stream()
+                .map(user -> new UserAdapter(session, realm, model, user));
+    }
+
+    @Override
+    public Stream<UserModel> searchForUserStream(RealmModel realm, Map<String, String> params) {
+        return getAllUsers().stream()
+                .map(user -> new UserAdapter(session, realm, model, user));
     }
 
     @Override
     public Stream<UserModel> searchForUserStream(RealmModel realm, String search, Integer firstResult, Integer maxResults) {
-        return null;
+        return findUsers(search, firstResult, maxResults).stream()
+                .map(user -> new UserAdapter(session, realm, model, user));
     }
 
     @Override
     public Stream<UserModel> searchForUserStream(RealmModel realm, Map<String, String> params, Integer firstResult, Integer maxResults) {
-        return null;
+        return getAllUsers(firstResult, maxResults).stream()
+                .map(user -> new UserAdapter(session, realm, model, user));
     }
+
 
     @Override
     public Stream<UserModel> getGroupMembersStream(RealmModel realm, GroupModel group, Integer firstResult, Integer maxResults) {
-        return null;
+        return Stream.empty();
     }
 
     @Override
     public Stream<UserModel> searchForUserByUserAttributeStream(RealmModel realm, String attrName, String attrValue) {
-        return null;
+        return Stream.empty();
     }
 
-
-//    @Override
-//    public List<UserModel> getUsers(RealmModel realm) {
-//        return getUsers(realm, -1, -1);
-//    }
-//
-//    @Override
-//    public List<UserModel> getUsers(RealmModel realm, int firstResult, int maxResults) {
-//
-//        TypedQuery<UserEntity> query = em.createNamedQuery("getAllUsers", UserEntity.class);
-//        if (firstResult != -1) {
-//            query.setFirstResult(firstResult);
-//        }
-//        if (maxResults != -1) {
-//            query.setMaxResults(maxResults);
-//        }
-//        List<UserEntity> results = query.getResultList();
-//        List<UserModel> users = new LinkedList<>();
-//        for (UserEntity entity : results) users.add(new UserAdapter(session, realm, model, entity));
-//        return users;
-//    }
-//
-//    @Override
-//    public List<UserModel> searchForUser(String search, RealmModel realm) {
-//        return searchForUser(search, realm, -1, -1);
-//    }
-//
-//    @Override
-//    public List<UserModel> searchForUser(String search, RealmModel realm, int firstResult, int maxResults) {
-//        TypedQuery<UserEntity> query = em.createNamedQuery("searchForUser", UserEntity.class);
-//        query.setParameter("search", "%" + search.toLowerCase() + "%");
-//        if (firstResult != -1) {
-//            query.setFirstResult(firstResult);
-//        }
-//        if (maxResults != -1) {
-//            query.setMaxResults(maxResults);
-//        }
-//        List<UserEntity> results = query.getResultList();
-//        List<UserModel> users = new LinkedList<>();
-//        for (UserEntity entity : results) users.add(new UserAdapter(session, realm, model, entity));
-//        return users;
-//    }
 
 
 }

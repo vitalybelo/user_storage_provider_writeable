@@ -1,16 +1,18 @@
-package org.example.federation.users;
+package org.example.federation.users.adapter;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.federation.users.UserEntity;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.component.ComponentModel;
-import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.RealmModel;
-import org.keycloak.models.UserModel;
+import org.keycloak.credential.LegacyUserCredentialManager;
+import org.keycloak.models.*;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.adapter.AbstractUserAdapterFederatedStorage;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 @Slf4j
 public class UserAdapter extends AbstractUserAdapterFederatedStorage {
@@ -60,6 +62,70 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     @Override
+    public String getFirstName() {
+        return entity.getFirstName();
+    }
+
+    @Override
+    public void setFirstName(String firstName) {
+        entity.setFirstName(firstName);
+    }
+
+    @Override
+    public String getLastName() {
+        return entity.getLastName();
+    }
+
+    @Override
+    public void setLastName(String lastName) {
+        entity.setLastName(lastName);
+    }
+
+    @Override
+    public SubjectCredentialManager credentialManager() {
+        return new LegacyUserCredentialManager(session, realm, this);
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return entity.getStatus().equals(ENABLED_TRUE);
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        if (enabled) {
+            entity.setStatus(ENABLED_TRUE);
+        } else {
+            entity.setStatus(ENABLED_FALSE);
+        }
+        super.setEnabled(enabled);
+    }
+
+    @Override
+    public boolean isEmailVerified() {
+        return super.isEmailVerified();
+    }
+
+    @Override
+    public void setEmailVerified(boolean verified) {
+        super.setEmailVerified(verified);
+    }
+
+    @Override
+    public Long getCreatedTimestamp() {
+        Long timestamp = entity.getCreated();
+        if (timestamp == null) {
+            entity.setCreated(System.currentTimeMillis());
+        }
+        return entity.getCreated();
+    }
+
+    @Override
+    public void setCreatedTimestamp(Long timestamp) {
+        entity.setCreated(Objects.requireNonNullElseGet(timestamp, System::currentTimeMillis));
+    }
+
+    @Override
     public void setSingleAttribute(String name, String value) {
 
         if (name.equals("phone")) {
@@ -106,9 +172,6 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     @Override
     public String getFirstAttribute(String name) {
 
-        // *****************************************
-        log.info(">>>> GEY FIRST ATTRIBUTE >>>>");
-        // *****************************************
         if (name.equals("phone")) {
             return entity.getPhone();
         } else if (name.equals("middle_name")) {
@@ -121,9 +184,6 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     @Override
     public Map<String, List<String>> getAttributes() {
 
-        // *****************************************
-        log.info(">>>> GEY ATTRIBUTES MAP >>>>");
-        // *****************************************
         MultivaluedHashMap<String, String> attributes = new MultivaluedHashMap<>();
 
         attributes.add(UserModel.USERNAME, entity.getUsername());
@@ -138,40 +198,13 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     @Override
-    public boolean isEnabled() {
-        return entity.getStatus().equals(ENABLED_TRUE);
-    }
-
-    @Override
-    public void setEnabled(boolean enabled) {
-        if (enabled) {
-            entity.setStatus(ENABLED_TRUE);
-        } else {
-            entity.setStatus(ENABLED_FALSE);
-        }
-        super.setEnabled(enabled);
-    }
-
-    @Override
-    public boolean isEmailVerified() {
-        return super.isEmailVerified();
-    }
-
-    @Override
-    public void setEmailVerified(boolean verified) {
-        super.setEmailVerified(verified);
-    }
-
-    @Override
-    public Long getCreatedTimestamp() {
-        // TODO - исправить этот метод, нужно возвращать реальную дату создания. В базе ЕЦА нет такого поля
-
-        return System.currentTimeMillis();
-    }
-
-    @Override
-    public void setCreatedTimestamp(Long timestamp) {
-        super.setCreatedTimestamp(timestamp);
+    protected Set<RoleModel> getRoleMappingsInternal() {
+//        if (user.getRoles() != null) {
+//            return user.getRoles().stream()
+//                    .map(roleName -> new CustomUserRoleModel(roleName, realm)).collect(Collectors.toSet());
+//        }
+//        return Set.of();
+        return Set.of();
     }
 
 }
