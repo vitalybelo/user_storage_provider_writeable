@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -21,8 +23,9 @@ import java.sql.Timestamp;
 public class UserEntity {
 
     @Id
+    @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Integer accountId;
 
     @Column(name = "login")
     private String username;
@@ -55,5 +58,7 @@ public class UserEntity {
 
     private Long created;
 
+    @OneToMany(mappedBy = "userAccount", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private Set<UserAccountRolesEntity> accountRolesLinks = new HashSet<>();
 
 }
