@@ -3,6 +3,7 @@ package org.example.federation.users;
 import lombok.extern.slf4j.Slf4j;
 import org.example.federation.users.adapter.UserAdapter;
 import org.example.federation.users.encoder.KeycloakBCryptPasswordEncoder;
+import org.example.federation.users.model.UserEntity;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
 import org.keycloak.credential.CredentialInput;
@@ -30,7 +31,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 @Slf4j
-public class MyUserStorageProvider implements
+public class CustomUserStorageProvider implements
         UserStorageProvider,
         UserLookupProvider,
         UserRegistrationProvider,
@@ -47,17 +48,12 @@ public class MyUserStorageProvider implements
     protected KeycloakSession session;
     private final KeycloakBCryptPasswordEncoder encoder = new KeycloakBCryptPasswordEncoder();
 
-    MyUserStorageProvider(KeycloakSession session, ComponentModel model) {
+    CustomUserStorageProvider(KeycloakSession session, ComponentModel model) {
         this.session = session;
         this.model = model;
         em = session.getProvider(JpaConnectionProvider.class, "user-store").getEntityManager();
     }
 
-    /**
-     * --------------------------------------------------------------------------------------------------------------
-     * TODO :: Реализация интерфейса serStorageProvider extends Provider
-     * --------------------------------------------------------------------------------------------------------------
-     */
     @Override
     public void preRemove(RealmModel realm) {}
 
@@ -95,7 +91,7 @@ public class MyUserStorageProvider implements
         UserEntity entity = em.find(UserEntity.class, Integer.parseInt(persistenceId));
 
         if (entity == null) {
-            log.info(">>>> невозможно найди пользователя по id = {} >>>>", persistenceId);
+            log.info(">>>> невозможно найти пользователя по id = {} >>>>", persistenceId);
             return null;
         }
         return new UserAdapter(session, realm, model, entity);
@@ -172,8 +168,11 @@ public class MyUserStorageProvider implements
         entity.setUsername(username);
         entity.setPassword(encoder.encode(username));
         entity.setCreated(System.currentTimeMillis());
+        entity.setMaxIdleTime(10);
+        entity.setMaxSessions(0);
+        entity.setBlockingDate(null);
+        entity.setBannerViewed(false);
         em.persist(entity);
-        log.info(">>>> ADDED USER: {}", username);
         return new UserAdapter(session, realm, model, entity);
     }
 
@@ -199,11 +198,6 @@ public class MyUserStorageProvider implements
         return true;
     }
 
-    /**
-     * --------------------------------------------------------------------------------------------------------------
-     * TODO :: Реализация интерфейса OnCache
-     * --------------------------------------------------------------------------------------------------------------
-     */
     @Override
     public void onCache(RealmModel realm, CachedUserModel user, UserModel delegate) {
         String password = ((UserAdapter)delegate).getPassword();
@@ -223,8 +217,8 @@ public class MyUserStorageProvider implements
     }
 
     @Override
-    public boolean isValid(RealmModel realm, UserModel user, CredentialInput input)
-    {
+    public boolean isValid(RealmModel realm, UserModel user, CredentialInput input) {
+
         if (!supportsCredentialType(input.getType()) || !(input instanceof UserCredentialModel)) {
             return false;
         }
@@ -235,6 +229,7 @@ public class MyUserStorageProvider implements
     }
 
     public String getPassword(UserModel user) {
+
         String password = null;
         if (user instanceof CachedUserModel) {
             password = (String)((CachedUserModel)user).getCachedWith().get(PASSWORD_CACHE_KEY);
@@ -246,6 +241,7 @@ public class MyUserStorageProvider implements
 
     @Override
     public boolean updateCredential(RealmModel realm, UserModel user, CredentialInput input) {
+
         if (!supportsCredentialType(input.getType()) || !(input instanceof UserCredentialModel)) {
             return false;
         }

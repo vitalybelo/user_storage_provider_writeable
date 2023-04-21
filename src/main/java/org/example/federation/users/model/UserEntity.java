@@ -1,8 +1,9 @@
-package org.example.federation.users;
+package org.example.federation.users.model;
 
 import lombok.Getter;
 import lombok.Setter;
 import javax.persistence.*;
+import java.sql.Timestamp;
 
 @Getter
 @Setter
@@ -38,7 +39,21 @@ public class UserEntity {
 
     private String email;
     private String phone;
+    private String department;
+    private String position;
+
+    @Column(name = "ip")
+    private String ipAddress;
+    @Column(name = "max_sessions")
+    private int maxSessions;
+    @Column(name = "max_idle_time")
+    private int maxIdleTime;
+    @Column(name = "blocking_start_date")
+    private Timestamp blockingDate;
+    @Column(name = "banner_viewed")
+    private boolean bannerViewed;
 
     private Long created;
+
 
 }

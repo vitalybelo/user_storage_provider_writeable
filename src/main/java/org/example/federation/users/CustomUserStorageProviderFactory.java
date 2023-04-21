@@ -7,14 +7,14 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.storage.UserStorageProviderFactory;
 
 @Slf4j
-public class MyExampleUserStorageProviderFactory implements UserStorageProviderFactory<MyUserStorageProvider> {
+public class CustomUserStorageProviderFactory implements UserStorageProviderFactory<CustomUserStorageProvider> {
 
     public static final String PROVIDER_ID = "JDBC USERS";
 
     @Override
-    public MyUserStorageProvider create(KeycloakSession session, ComponentModel model) {
+    public CustomUserStorageProvider create(KeycloakSession session, ComponentModel model) {
         log.info(">>>>>> Creating factory >>>>>>");
-        return new MyUserStorageProvider(session, model);
+        return new CustomUserStorageProvider(session, model);
     }
 
     @Override
