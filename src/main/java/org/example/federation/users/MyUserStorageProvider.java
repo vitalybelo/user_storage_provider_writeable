@@ -59,7 +59,7 @@ public class MyUserStorageProvider implements
 
     /**
      * --------------------------------------------------------------------------------------------------------------
-     * TODO Реализация интерфейса serStorageProvider extends Provider
+     * TODO :: Реализация интерфейса serStorageProvider extends Provider
      * --------------------------------------------------------------------------------------------------------------
      */
     @Override
@@ -74,55 +74,84 @@ public class MyUserStorageProvider implements
     @Override
     public void close() {}
 
+    /**
+     * --------------------------------------------------------------------------------------------------------------
+     * TODO :: Реализация интерфейса UserLookupProvider
+     * Это необязательный интерфейс возможностей, который предназначен для реализации любым UserStorageProvider,
+     * поддерживающим базовые пользовательские запросы. Вы должны реализовать этот интерфейс, если хотите иметь
+     * возможность входить в keycloak, используя пользователей из вашего хранилища.
+     * !!! Обратите внимание, что все методы в этом интерфейсе должны ограничивать поиск только данными, доступными
+     * в хранилище, которое представлено этим провайдером. Им не следует обращаться к другим поставщикам хранилищ для
+     * получения дополнительной информации. Необязательный интерфейс возможностей, реализованный UserStorageProviders.
+     * --------------------------------------------------------------------------------------------------------------
+     */
 
+    /**
+     * Возвращает пользователя с заданным ID идентификатором, принадлежащего области
+     * @param realm модель области
+     * @param id id пользователя
+     * @return найденная модель пользователя или null, если такой пользователь не существует
+     */
     @Override
     public UserModel getUserById(RealmModel realm, String id)
     {
         String persistenceId = StorageId.externalId(id);
-        // *****************************************************
-        log.info(">>>> GET USER BY ID {} >>>>: ", id);
-        // *****************************************************
         UserEntity entity = em.find(UserEntity.class, Integer.parseInt(persistenceId));
+
         if (entity == null) {
-            log.info(">>>> COULD NOT FIND USER BY ID = {} >>> ", persistenceId);
+            log.info(">>>> невозможно найди пользователя по id = {} >>>>", persistenceId);
             return null;
         }
         return new UserAdapter(session, realm, model, entity);
     }
 
+    /**
+     * Точный поиск пользователя по его имени пользователя.
+     * Возвращает пользователя с заданным именем пользователя, принадлежащего области
+     * @param realm модель области
+     * @param username имя пользователя, чувствительно к регистру
+     * @return найденная модель пользователя или null, если такой пользователь не существует
+     * @Throws ModelDuplicateException — при поиске в режиме без учета регистра и наличии большего количества
+     * пользователей с именем пользователя, которое отличается только регистром.
+     */
     @Override
     public UserModel getUserByUsername(RealmModel realm, String username)
     {
-        // *****************************************************
-        log.info(">>>> GET USER BY NAME: {} >>>>", username);
-        // *****************************************************
         TypedQuery<UserEntity> query = em.createNamedQuery("getUserByUsername", UserEntity.class);
         query.setParameter("username", username);
         List<UserEntity> result = query.getResultList();
 
         if (result.isEmpty()) {
-            log.info(">>>> COULD NOT FIND USERNAME = {} >>>>", username);
+            log.info(">>>> невозможно найти пользователя по имени_пользователя = {} >>>>", username);
             return null;
         }
         return new UserAdapter(session, realm, model, result.get(0));
     }
 
+    /**
+     * Возвращает пользователя с данным адресом электронной почты, принадлежащим области
+     * @param realm модель области
+     * @param email email адрес для поиска
+     * @return найденная модель пользователя или null, если такой пользователь не существует
+     * @Throws ModelDuplicateException — когда есть больше пользователей с одним и тем же адресом электронной почты
+     */
     @Override
     public UserModel getUserByEmail(RealmModel realm, String email)
     {
-        // *****************************************************
-        log.info(">>>> GET USER BY EMAIL: {} >>>>", email);
-        // *****************************************************
         TypedQuery<UserEntity> query = em.createNamedQuery("getUserByEmail", UserEntity.class);
         query.setParameter("email", email);
         List<UserEntity> result = query.getResultList();
-        if (result.isEmpty()) return null;
+
+        if (result.isEmpty()) {
+            log.info(">>>> невозможно найти пользователя по email = {} >>>>", email);
+            return null;
+        }
         return new UserAdapter(session, realm, model, result.get(0));
     }
 
     /**
      * --------------------------------------------------------------------------------------------------------------
-     * TODO Реализация интерфейса UserRegistrationProvider
+     * TODO :: Реализация интерфейса UserRegistrationProvider
      * Это необязательный интерфейс возможностей, который предназначен для реализации любым UserStorageProvider,
      * поддерживающим добавление новых пользователей. Вы должны реализовать этот интерфейс, если хотите использовать
      * это хранилище для регистрации новых пользователей.
@@ -175,7 +204,7 @@ public class MyUserStorageProvider implements
 
     /**
      * --------------------------------------------------------------------------------------------------------------
-     * TODO Реализация интерфейса OnCache
+     * TODO :: Реализация интерфейса OnCache
      * --------------------------------------------------------------------------------------------------------------
      */
     @Override
@@ -250,11 +279,47 @@ public class MyUserStorageProvider implements
         return Stream.empty();
     }
 
+    /**
+     * --------------------------------------------------------------------------------------------------------------
+     * TODO :: Реализация интерфейса UserQueryProvider
+     * Это необязательный интерфейс возможностей, который предназначен для реализации любым UserStorageProvider,
+     * поддерживающим сложные пользовательские запросы. Вы должны реализовать этот интерфейс, если хотите просматривать
+     * и управлять пользователями из административной консоли.
+     * !!! Обратите внимание, что все методы в этом интерфейсе должны ограничивать поиск только данными, доступными
+     * в хранилище, которое представлено этим провайдером. Им не следует обращаться к другим поставщикам хранилищ для
+     * получения дополнительной информации.
+     * --------------------------------------------------------------------------------------------------------------
+     */
+
     @Override
     public int getUsersCount(RealmModel realm) {
-        log.info(">>>> GET USERS COUNT >>>>");
+        // ********************************************************************
+        System.out.println("\n>>>> GET USERS COUNT >>>>");
+        // ********************************************************************
+
         Object count = em.createNamedQuery("getUserCount").getSingleResult();
         return ((Number)count).intValue();
+    }
+
+    public List<UserModel> getUsers(RealmModel realm, int firstResult, int maxResults) {
+
+        // ********************************************************************
+        System.out.println("\n>>>> GET USERS FROM DATABASE >>>>");
+        // ********************************************************************
+
+        TypedQuery<UserEntity> query = em.createNamedQuery("getAllUsers", UserEntity.class);
+        if (firstResult != -1) {
+            query.setFirstResult(firstResult);
+        }
+        if (maxResults != -1) {
+            query.setMaxResults(maxResults);
+        }
+        List<UserEntity> results = query.getResultList();
+        List<UserModel> users = new LinkedList<>();
+        for (UserEntity entity : results) {
+            users.add(new UserAdapter(session, realm, model, entity));
+        }
+        return users;
     }
 
     @Override
@@ -276,6 +341,7 @@ public class MyUserStorageProvider implements
     public Stream<UserModel> searchForUserByUserAttributeStream(RealmModel realm, String attrName, String attrValue) {
         return null;
     }
+
 
 //    @Override
 //    public List<UserModel> getUsers(RealmModel realm) {
