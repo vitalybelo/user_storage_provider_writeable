@@ -164,7 +164,8 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     public Long getCreatedTimestamp() {
-        // TODO - исправить этот метод, нужно возвращать реальную дату создания
+        // TODO - исправить этот метод, нужно возвращать реальную дату создания. В базе ЕЦА нет такого поля
+
         return System.currentTimeMillis();
     }
 

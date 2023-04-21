@@ -57,6 +57,11 @@ public class MyUserStorageProvider implements
         em = session.getProvider(JpaConnectionProvider.class, "user-store").getEntityManager();
     }
 
+    /**
+     * --------------------------------------------------------------------------------------------------------------
+     * TODO Реализация интерфейса serStorageProvider extends Provider
+     * --------------------------------------------------------------------------------------------------------------
+     */
     @Override
     public void preRemove(RealmModel realm) {}
 
@@ -68,6 +73,7 @@ public class MyUserStorageProvider implements
 
     @Override
     public void close() {}
+
 
     @Override
     public UserModel getUserById(RealmModel realm, String id)
@@ -114,6 +120,25 @@ public class MyUserStorageProvider implements
         return new UserAdapter(session, realm, model, result.get(0));
     }
 
+    /**
+     * --------------------------------------------------------------------------------------------------------------
+     * TODO Реализация интерфейса UserRegistrationProvider
+     * Это необязательный интерфейс возможностей, который предназначен для реализации любым UserStorageProvider,
+     * поддерживающим добавление новых пользователей. Вы должны реализовать этот интерфейс, если хотите использовать
+     * это хранилище для регистрации новых пользователей.
+     * --------------------------------------------------------------------------------------------------------------
+     */
+
+    /**
+     * Все поставщики хранилищ, реализующие этот интерфейс, будут проходить через цикл.
+     * Если этот метод возвращает значение null, будет вызван метод addUser() следующего поставщика хранилища.
+     * Если никакие поставщики хранилища не обрабатывают добавление, пользователь будет создан в локальном хранилище.
+     * Возврат null полезен, когда вам нужна дополнительная поддержка для добавления пользователей. Например, наш
+     * LDAP-провайдер может включать и отключать возможность добавления пользователей.
+     * @param realm ссылка на область
+     * @param username имя пользователя, которому будет присвоен созданный новый пользователь
+     * @return модель созданного пользователя
+     */
     @Override
     public UserModel addUser(RealmModel realm, String username)
     {
@@ -122,20 +147,37 @@ public class MyUserStorageProvider implements
         entity.setUsername(username);
         entity.setPassword(encoder.encode(username));
         em.persist(entity);
-        log.info("added user: " + username);
+        log.info(">>>> ADDED USER: {}", username);
         return new UserAdapter(session, realm, model, entity);
     }
 
+    /**
+     * Вызывается, если пользователь удаляется от этого провайдера.
+     * Если локальный пользователь связан с этим провайдером, этот метод будет вызываться до вызова метода removeUser()
+     * локального хранилища. Если вы используете стратегию импорта и это локальный пользователь, связанный с этим
+     * провайдером, этот метод будет вызываться до вызова метода removeUser() локального хранилища. Кроме того, вам
+     * НЕ нужно удалять импортированного пользователя. Среда выполнения сделает это за вас.
+     * @param realm ссылка на царство
+     * @param user ссылка на удаляемого пользователя
+     * @return true, если пользователь был удален, иначе false
+     */
     @Override
     public boolean removeUser(RealmModel realm, UserModel user)
     {
         String persistenceId = StorageId.externalId(user.getId());
-        UserEntity entity = em.find(UserEntity.class, persistenceId);
-        if (entity == null) return false;
+        UserEntity entity = em.find(UserEntity.class, Integer.parseInt(persistenceId));
+        if (entity == null) {
+            return false;
+        }
         em.remove(entity);
         return true;
     }
 
+    /**
+     * --------------------------------------------------------------------------------------------------------------
+     * TODO Реализация интерфейса OnCache
+     * --------------------------------------------------------------------------------------------------------------
+     */
     @Override
     public void onCache(RealmModel realm, CachedUserModel user, UserModel delegate) {
         String password = ((UserAdapter)delegate).getPassword();
