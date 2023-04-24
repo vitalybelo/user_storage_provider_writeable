@@ -9,8 +9,9 @@ import org.keycloak.models.*;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.adapter.AbstractUserAdapterFederatedStorage;
 
-import java.sql.Timestamp;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class UserAdapter extends AbstractUserAdapterFederatedStorage {
@@ -213,11 +214,10 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     protected Set<RoleModel> getRoleMappingsInternal() {
-//        if (user.getRoles() != null) {
-//            return user.getRoles().stream()
-//                    .map(roleName -> new CustomUserRoleModel(roleName, realm)).collect(Collectors.toSet());
-//        }
-//        return Set.of();
+        if (entity.getRoleList() != null) {
+            return entity.getRoleList().stream()
+                    .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm)).collect(Collectors.toSet());
+        }
         return Set.of();
     }
 

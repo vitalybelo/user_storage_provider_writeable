@@ -88,7 +88,7 @@ public class CustomUserStorageProvider implements
     public UserModel getUserById(RealmModel realm, String id)
     {
         String persistenceId = StorageId.externalId(id);
-        UserEntity user = em.find(UserEntity.class, Integer.parseInt(persistenceId));
+        UserEntity user = em.find(UserEntity.class, Long.parseLong(persistenceId));
 
         if (user == null) {
             log.info(">>>> невозможно найти пользователя по id = {} >>>>", persistenceId);
@@ -192,12 +192,12 @@ public class CustomUserStorageProvider implements
     public boolean removeUser(RealmModel realm, UserModel userModel)
     {
         String persistenceId = StorageId.externalId(userModel.getId());
-        UserEntity user = em.find(UserEntity.class, Integer.parseInt(persistenceId));
+        UserEntity user = em.find(UserEntity.class, Long.parseLong(persistenceId));
         if (user == null) {
             return false;
         }
         em.getTransaction().begin();
-        user.getRolesList().forEach(role -> role.getUsersList().remove(user));
+        user.getRoleList().forEach(role -> role.getUserList().remove(user));
         em.remove(user);
         em.getTransaction().commit();
         return true;

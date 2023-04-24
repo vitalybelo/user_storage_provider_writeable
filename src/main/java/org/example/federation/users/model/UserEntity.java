@@ -10,6 +10,8 @@ import java.util.*;
 @NoArgsConstructor
 @Getter
 @Setter
+@Entity
+@Table(name = "accounts", schema = "privfastsm")
 @NamedQueries({
         @NamedQuery(name="getUserByUsername", query="select u from UserEntity u where u.username = :username"),
         @NamedQuery(name="getUserByEmail", query="select u from UserEntity u where u.email = :email"),
@@ -18,9 +20,6 @@ import java.util.*;
         @NamedQuery(name="searchForUser", query="select u from UserEntity u where " +
                 "( lower(u.username) like :search or u.email like :search ) order by u.username"),
 })
-
-@Entity
-@Table(name = "accounts", schema = "privfastsm")
 public class UserEntity {
 
     @Id
@@ -59,14 +58,43 @@ public class UserEntity {
 
     private Long created;
 
-    @ManyToMany(mappedBy = "usersList", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
-    private Set<RoleEntity> rolesList = new HashSet<>();
+    @ManyToMany(
+            fetch = FetchType.EAGER,
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE}
+    )
+    @JoinTable(name = "account_role",
+            joinColumns = @JoinColumn(name = "account_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<UserRoleEntity> roleList = new LinkedHashSet<>();
 
-    public void AddUserRole(RoleEntity role) {
+    public void addUserRole(UserRoleEntity role) {
         if (role != null) {
-            rolesList.add(role);
-            role.getUsersList().add(this);
+            roleList.add(role);
+            role.getUserList().add(this);
         }
+    }
+
+    public void removeUserRole(UserRoleEntity role) {
+        if (role != null) {
+            roleList.remove(role);
+            role.getUserList().remove(this);
+        }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof UserEntity)) {
+            return false;
+        }
+        return accountId != null && accountId.equals(((UserEntity) obj).getAccountId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 
 }
