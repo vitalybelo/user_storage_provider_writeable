@@ -10,10 +10,9 @@
         <properties>
             <property name="hibernate.connection.datasource" value="user-store" />
             <!-- Sets the parameters of the datasource to be the same as the datasource name in quarkus.properties -->
-            <!-- <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://172.29.92.24:5432/test_601_1"/> -->
 
             <property name="hibernate.dialect" value="io.quarkus.hibernate.orm.runtime.dialect.QuarkusPostgreSQL95Dialect" />
-            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://172.29.92.25:5432/belovapi"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://172.29.92.24:5432/vetalcopy_601_1"/>
             <property name="javax.persistence.jdbc.user" value="postgres"/>
             <property name="javax.persistence.jdbc.password" value="postgres"/>
             <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>

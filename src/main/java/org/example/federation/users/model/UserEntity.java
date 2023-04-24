@@ -1,12 +1,13 @@
 package org.example.federation.users.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 @NamedQueries({
@@ -19,13 +20,13 @@ import java.util.Set;
 })
 
 @Entity
-@Table(schema = "privfastsm", name = "accounts")
+@Table(name = "accounts", schema = "privfastsm")
 public class UserEntity {
 
     @Id
     @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer accountId;
+    private Long accountId;
 
     @Column(name = "login")
     private String username;
@@ -58,7 +59,14 @@ public class UserEntity {
 
     private Long created;
 
-    @OneToMany(mappedBy = "userAccount", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private Set<UserAccountRolesEntity> accountRolesLinks = new HashSet<>();
+    @ManyToMany(mappedBy = "usersList", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    private Set<RoleEntity> rolesList = new HashSet<>();
+
+    public void AddUserRole(RoleEntity role) {
+        if (role != null) {
+            rolesList.add(role);
+            role.getUsersList().add(this);
+        }
+    }
 
 }

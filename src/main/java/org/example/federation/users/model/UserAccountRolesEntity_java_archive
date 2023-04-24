@@ -1,25 +1,28 @@
 package org.example.federation.users.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import javax.persistence.*;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 @Entity
-@Table(schema = "privfastsm", name = "account_role")
+@Table(name = "account_role", schema = "privfastsm")
 public class UserAccountRolesEntity {
 
     @Id
     @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer accountRoleId;
+    private Integer id;
 
     @Column(name = "role_id", nullable = false)
     private Integer roleId;
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "account_id", nullable = false)
-    private UserEntity userAccount;
+    @Column(name = "account_id", nullable = false)
+    private Integer accountId;
 
 }

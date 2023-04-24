@@ -88,13 +88,13 @@ public class CustomUserStorageProvider implements
     public UserModel getUserById(RealmModel realm, String id)
     {
         String persistenceId = StorageId.externalId(id);
-        UserEntity entity = em.find(UserEntity.class, Integer.parseInt(persistenceId));
+        UserEntity user = em.find(UserEntity.class, Integer.parseInt(persistenceId));
 
-        if (entity == null) {
+        if (user == null) {
             log.info(">>>> невозможно найти пользователя по id = {} >>>>", persistenceId);
             return null;
         }
-        return new UserAdapter(session, realm, model, entity);
+        return new UserAdapter(session, realm, model, user);
     }
 
     /**
@@ -111,13 +111,13 @@ public class CustomUserStorageProvider implements
     {
         TypedQuery<UserEntity> query = em.createNamedQuery("getUserByUsername", UserEntity.class);
         query.setParameter("username", username);
-        List<UserEntity> result = query.getResultList();
+        List<UserEntity> userList = query.getResultList();
 
-        if (result.isEmpty()) {
+        if (userList.isEmpty()) {
             log.info(">>>> невозможно найти пользователя по имени_пользователя = {} >>>>", username);
             return null;
         }
-        return new UserAdapter(session, realm, model, result.get(0));
+        return new UserAdapter(session, realm, model, userList.get(0));
     }
 
     /**
@@ -132,13 +132,13 @@ public class CustomUserStorageProvider implements
     {
         TypedQuery<UserEntity> query = em.createNamedQuery("getUserByEmail", UserEntity.class);
         query.setParameter("email", email);
-        List<UserEntity> result = query.getResultList();
+        List<UserEntity> userList = query.getResultList();
 
-        if (result.isEmpty()) {
+        if (userList.isEmpty()) {
             log.info(">>>> невозможно найти пользователя по email = {} >>>>", email);
             return null;
         }
-        return new UserAdapter(session, realm, model, result.get(0));
+        return new UserAdapter(session, realm, model, userList.get(0));
     }
 
     /**
@@ -172,7 +172,9 @@ public class CustomUserStorageProvider implements
         entity.setMaxSessions(0);
         entity.setBlockingDate(null);
         entity.setBannerViewed(false);
+        em.getTransaction().begin();
         em.persist(entity);
+        em.getTransaction().commit();
         return new UserAdapter(session, realm, model, entity);
     }
 
@@ -183,18 +185,21 @@ public class CustomUserStorageProvider implements
      * провайдером, этот метод будет вызываться до вызова метода removeUser() локального хранилища. Кроме того, вам
      * НЕ нужно удалять импортированного пользователя. Среда выполнения сделает это за вас.
      * @param realm ссылка на царство
-     * @param user ссылка на удаляемого пользователя
+     * @param userModel ссылка на удаляемого пользователя
      * @return true, если пользователь был удален, иначе false
      */
     @Override
-    public boolean removeUser(RealmModel realm, UserModel user)
+    public boolean removeUser(RealmModel realm, UserModel userModel)
     {
-        String persistenceId = StorageId.externalId(user.getId());
-        UserEntity entity = em.find(UserEntity.class, Integer.parseInt(persistenceId));
-        if (entity == null) {
+        String persistenceId = StorageId.externalId(userModel.getId());
+        UserEntity user = em.find(UserEntity.class, Integer.parseInt(persistenceId));
+        if (user == null) {
             return false;
         }
-        em.remove(entity);
+        em.getTransaction().begin();
+        user.getRolesList().forEach(role -> role.getUsersList().remove(user));
+        em.remove(user);
+        em.getTransaction().commit();
         return true;
     }
 
