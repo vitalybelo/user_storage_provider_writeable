@@ -2,7 +2,6 @@ package org.example.federation.users.adapter;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.federation.users.model.UserEntity;
-import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.credential.LegacyUserCredentialManager;
@@ -10,16 +9,13 @@ import org.keycloak.models.*;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.adapter.AbstractUserAdapterFederatedStorage;
 
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
-public class UserAdapter extends AbstractUserAdapterFederatedStorage {
+public class UserAdapter extends AbstractUserAdapterFederatedStorage.Streams {
 
     private static final String ENABLED_TRUE = "ACTIVE";
     private static final String ENABLED_FALSE = "DELETED";
@@ -30,7 +26,6 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     private static final String ATTRIBUTE_POSITION = "должность";
     private static final String ATTRIBUTE_IP_ADDRESS = "IP адрес";
     private static final String ATTRIBUTE_BANNER_VIEWED = "показ баннера безопасности";
-    private static final String ATTRIBUTE_BLOCKING_DATE = "дата начала блокировки аккаунта";
 
     protected UserEntity entity;
     protected String keycloakId;
@@ -138,6 +133,16 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         entity.setCreated(Objects.requireNonNullElseGet(timestamp, System::currentTimeMillis));
     }
 
+    public void setPasswordChangeDate(Timestamp now) {
+        entity.setPasswordChangeDate(now);
+    }
+
+    /**
+     * Устанавливает кастомный аттрибут пользователя из jdbc федеративного хранилища в карточку пользователя keycloak
+     * @param name название аттрибута
+     * @param value значение аттрибута
+     * @return true если ни один из кастомных аттрибутов не был установлен и требуется установка методом из super
+     */
     public boolean isCustomAttributeMissedSetup(String name, String value) {
         switch (name) {
             case ATTRIBUTE_PHONE: entity.setPhone(value); return false;
@@ -219,6 +224,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     @Override
     protected Set<RoleModel> getRoleMappingsInternal() {
+
         if (entity.getRoleList() != null) {
             return entity.getRoleList().stream()
                     .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm)).collect(Collectors.toSet());
@@ -226,25 +232,6 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         return Set.of();
     }
 
-    @Inject
-    protected EntityManager em;
-    public List<UserRoleEntity> getAllRoles() {
-        TypedQuery<UserRoleEntity> query = em.createNamedQuery("getAllRoles", UserRoleEntity.class);
-        return query.getResultList();
-    }
 
-    @Override
-    public Stream<RoleModel> getRealmRoleMappingsStream() {
-        System.out.println("\n >>>>>>>>> getRealmRoleMappingsStream() >>>>>>>>>");
-        return getAllRoles().stream()
-                .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm));
-    }
 
-    public void setPasswordChangeDate(Timestamp now) {
-        entity.setPasswordChangeDate(now);
-    }
-
-    public Timestamp getPasswordChangeDate() {
-        return entity.getPasswordChangeDate();
-    }
 }

@@ -1,22 +1,22 @@
 package org.example.federation.users.adapter;
 
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import org.keycloak.models.RealmModel;
-import org.keycloak.models.RoleContainerModel;
-import org.keycloak.models.RoleModel;
+import org.keycloak.models.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-@AllArgsConstructor
-@RequiredArgsConstructor
 public class UserRoleModel implements RoleModel {
 
     private String name;
     private String description;
     private final RealmModel realm;
+
+    public UserRoleModel(String name, String description, RealmModel realm) {
+        this.name = name;
+        this.description = description;
+        this.realm = realm;
+    }
 
     @Override
     public String getName() {
@@ -99,6 +99,11 @@ public class UserRoleModel implements RoleModel {
     }
 
     @Override
+    public String getFirstAttribute(String name) {
+        return RoleModel.super.getFirstAttribute(name);
+    }
+
+    @Override
     public Stream<String> getAttributeStream(String name) {
         return null;
     }
@@ -107,4 +112,6 @@ public class UserRoleModel implements RoleModel {
     public Map<String, List<String>> getAttributes() {
         return null;
     }
+
+
 }
