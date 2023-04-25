@@ -12,7 +12,9 @@ import java.util.*;
 @Setter
 @Entity
 @Table(name = "userroles", schema = "privfastsm")
-
+@NamedQueries({
+        @NamedQuery(name="getAllRoles", query="select r from UserRoleEntity r")
+})
 public class UserRoleEntity {
 
     @Id
@@ -27,9 +29,8 @@ public class UserRoleEntity {
 
     @ManyToMany(
             mappedBy = "roleList",
-            fetch = FetchType.EAGER,
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE}
-    )
+            fetch = FetchType.LAZY,
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Set<UserEntity> userList = new LinkedHashSet<>();
 
 

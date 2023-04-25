@@ -44,6 +44,7 @@ public class UserEntity {
     private String phone;
     private String department;
     private String position;
+    private Long created;
 
     @Column(name = "ip")
     private String ipAddress;
@@ -55,11 +56,11 @@ public class UserEntity {
     private Timestamp blockingDate;
     @Column(name = "banner_viewed")
     private boolean bannerViewed;
-
-    private Long created;
+    @Column(name = "password_change_date")
+    private Timestamp passwordChangeDate;
 
     @ManyToMany(
-            fetch = FetchType.EAGER,
+            fetch = FetchType.LAZY,
             cascade = {CascadeType.PERSIST, CascadeType.MERGE}
     )
     @JoinTable(name = "account_role",
