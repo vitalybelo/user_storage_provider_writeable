@@ -37,8 +37,8 @@ public class CustomUserStorageProvider implements
         UserQueryProvider,
         CredentialInputUpdater,
         CredentialInputValidator,
-        RoleLookupProvider,
-        RoleProvider,
+//        RoleLookupProvider,
+//        RoleProvider,
         OnUserCache
 {
     public static final String PASSWORD_CACHE_KEY = UserAdapter.class.getName() + ".password";
@@ -55,16 +55,7 @@ public class CustomUserStorageProvider implements
     }
 
     @Override
-    public void preRemove(RealmModel realm) {}
-
-    @Override
-    public void preRemove(RealmModel realm, GroupModel group) {}
-
-    @Override
-    public void preRemove(RealmModel realm, RoleModel role) {}
-
-    @Override
-    public void close() {}
+    public void close() { }
 
     /**
      * --------------------------------------------------------------------------------------------------------------
@@ -471,163 +462,163 @@ public class CustomUserStorageProvider implements
         return Stream.empty();
     }
 
-    /**--------------------------------------------------------------------------------------------------------------
-     * TODO :: Реализация интерфейса RoleLookupProvider
-     * Интерфейс для поиска как ролей области, так и ролей клиента по идентификатору, имени и описанию.
-     * --------------------------------------------------------------------------------------------------------------
-     */
-
-    /**
-     * Загружает из jdbc федеративного хранилища все имеющиеся роли
-     * @param firstResult Первый результат для возврата. Игнорируется, если отрицательный или нулевой.
-     * @param maxResults Максимальное количество возвращаемых результатов. Игнорируется, если отрицательный или нулевой.
-     * @return коллекцию класса UserRoleEntity с названиями и описаниями имеющихся ролей
-     */
-    public List<UserRoleEntity> findAllRoles(int firstResult, int maxResults) {
-        System.out.println("\n>>>>>>>>> GET ALL ROLES LIST >>>>>>>>>>>");
-
-        TypedQuery<UserRoleEntity> query = em.createNamedQuery("getAllRoles", UserRoleEntity.class);
-        if (firstResult != -1) {
-            query.setFirstResult(firstResult);
-        }
-        if (maxResults != -1) {
-            query.setMaxResults(maxResults);
-        }
-        return query.getResultList();
-    }
-
-    /**
-     * Загружает из jdbc федеративного хранилища все имеющиеся роли по параметру маски поиска
-     * @param name маска поиска (если "*" возвращает коллекцию всех ролей из хранилища)
-     * @param firstResult Первый результат для возврата. Игнорируется, если отрицательный или нулевой.
-     * @param maxResults Максимальное количество возвращаемых результатов. Игнорируется, если отрицательный или нулевой.
-     * @return коллекцию класса UserRoleEntity с названиями и описаниями найденных ролей
-     */
-    public List<UserRoleEntity> findRoles(String name, int firstResult, int maxResults) {
-        System.out.println("\n>>>>>>>>> FIND ROLES LIST >>>>>>>>>>>");
-
-        if (name.equalsIgnoreCase("*")) {
-            return findAllRoles(-1, -1);
-        }
-        TypedQuery<UserRoleEntity> query = em.createNamedQuery("searchForRole", UserRoleEntity.class);
-        query.setParameter("search", "%" + name.toLowerCase() + "%");
-        if (firstResult != -1) {
-            query.setFirstResult(firstResult);
-        }
-        if (maxResults != -1) {
-            query.setMaxResults(maxResults);
-        }
-        return query.getResultList();
-    }
-
-    /**
-     * Точный поиск роли по имени в jdbc хранилище.
-     * @param realm рабочая область
-     * @param name имя роли для поиска в хранилище
-     * @return модель роли или null, если роль не найдена
-     */
-    @Override
-    public RoleModel getRealmRole(RealmModel realm, String name) {
-        System.out.println("\n>>>>>>>>> GET REALM ROLE BY NAME >>>>>>>>>>>");
-
-        TypedQuery<UserRoleEntity> query = em.createNamedQuery("getRoleByName", UserRoleEntity.class);
-        query.setParameter("name", name);
-        List<UserRoleEntity> roles = query.getResultList();
-
-        if (roles.isEmpty()) {
-            log.info(">>>> невозможно найти роль по имени = {} >>>>", name);
-            return null;
-        }
-        return new UserRoleModel(roles.get(0).getName(), roles.get(0).getDescription(), realm);
-
-    }
-
-    @Override
-    public RoleModel getRoleById(RealmModel realm, String id) {
-        System.out.println("\n>>>>>>>>> GET REALM ROLE BY ID >>>>>>>>>>>");
-
-        return getRealmRole(realm, id);
-    }
-
-    /**
-     * Нечувствительный к регистру поиск ролей, которые содержат заданную строку в названии или описании.
-     * @param realm Рабочая область
-     * @param search Искомая подстрока имени или описания роли.
-     * @param first Первый результат для возврата. Игнорируется, если отрицательный или {@code null}.
-     * @param max Максимальное количество возвращаемых результатов. Игнорируется, если отрицательный или {@code null}.
-     * @return Поток ролей области их имя или описание содержит заданную строку поиска. Никогда не возвращает ноль
-     */
-    @Override
-    public Stream<RoleModel> searchForRolesStream(RealmModel realm, String search, Integer first, Integer max) {
-        System.out.println("\n>>>>>>>>> GET REALM ROLE BY ID >>>>>>>>>>>");
-
-        return findRoles(search, first, max).stream()
-                .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm));
-    }
-
-    @Override
-    public RoleModel getClientRole(ClientModel client, String name) {
-        return null;
-    }
-
-    @Override
-    public Stream<RoleModel> searchForClientRolesStream(ClientModel client, String search, Integer first, Integer max) {
-        return Stream.empty();
-    }
-
-    /**--------------------------------------------------------------------------------------------------------------
-     * TODO :: Реализация интерфейса RoleProvider
-     * Поставщик записей ролей.
-     * --------------------------------------------------------------------------------------------------------------
-     */
-
-    /**
-     * Добавляет роль с заданным именем в рабочую область. Внутренний идентификатор роли id будет создан автоматически.
-     * @param realm рабочая область
-     * @param id внутренний идентификатор роли или {@code null}, если он должен быть создан базовым хранилищем.
-     * @param name втроковое имя роли.
-     * @return модель созданной роли.
-     */
-    @Override
-    public RoleModel addRealmRole(RealmModel realm, String id, String name) {
-        return new UserRoleModel(name, "", realm);
-    }
-
-    @Override
-    public Stream<RoleModel> getRealmRolesStream(RealmModel realm, Integer first, Integer max) {
-        return findAllRoles(first, max).stream()
-                .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm));
-    }
-
-    @Override
-    public Stream<RoleModel> getRolesStream(RealmModel realm, Stream<String> ids, String search, Integer first, Integer max) {
-        return findRoles(search, first, max).stream()
-                .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm));
-    }
-
-    @Override
-    public boolean removeRole(RoleModel role) {
-        return false;
-    }
-
-    @Override
-    public void removeRoles(RealmModel realm) {
-    }
-
-    @Override
-    public RoleModel addClientRole(ClientModel client, String id, String name) {
-        return null;
-    }
-
-    @Override
-    public Stream<RoleModel> getClientRolesStream(ClientModel client, Integer first, Integer max) {
-        return null;
-    }
-
-    @Override
-    public void removeRoles(ClientModel client) {
-
-    }
+//    /**--------------------------------------------------------------------------------------------------------------
+//     * TODO :: Реализация интерфейса RoleLookupProvider
+//     * Интерфейс для поиска как ролей области, так и ролей клиента по идентификатору, имени и описанию.
+//     * --------------------------------------------------------------------------------------------------------------
+//     */
+//
+//    /**
+//     * Загружает из jdbc федеративного хранилища все имеющиеся роли
+//     * @param firstResult Первый результат для возврата. Игнорируется, если отрицательный или нулевой.
+//     * @param maxResults Максимальное количество возвращаемых результатов. Игнорируется, если отрицательный или нулевой.
+//     * @return коллекцию класса UserRoleEntity с названиями и описаниями имеющихся ролей
+//     */
+//    public List<UserRoleEntity> findAllRoles(int firstResult, int maxResults) {
+//        System.out.println("\n>>>>>>>>> GET ALL ROLES LIST >>>>>>>>>>>");
+//
+//        TypedQuery<UserRoleEntity> query = em.createNamedQuery("getAllRoles", UserRoleEntity.class);
+//        if (firstResult != -1) {
+//            query.setFirstResult(firstResult);
+//        }
+//        if (maxResults != -1) {
+//            query.setMaxResults(maxResults);
+//        }
+//        return query.getResultList();
+//    }
+//
+//    /**
+//     * Загружает из jdbc федеративного хранилища все имеющиеся роли по параметру маски поиска
+//     * @param name маска поиска (если "*" возвращает коллекцию всех ролей из хранилища)
+//     * @param firstResult Первый результат для возврата. Игнорируется, если отрицательный или нулевой.
+//     * @param maxResults Максимальное количество возвращаемых результатов. Игнорируется, если отрицательный или нулевой.
+//     * @return коллекцию класса UserRoleEntity с названиями и описаниями найденных ролей
+//     */
+//    public List<UserRoleEntity> findRoles(String name, int firstResult, int maxResults) {
+//        System.out.println("\n>>>>>>>>> FIND ROLES LIST >>>>>>>>>>>");
+//
+//        if (name.equalsIgnoreCase("*")) {
+//            return findAllRoles(-1, -1);
+//        }
+//        TypedQuery<UserRoleEntity> query = em.createNamedQuery("searchForRole", UserRoleEntity.class);
+//        query.setParameter("search", "%" + name.toLowerCase() + "%");
+//        if (firstResult != -1) {
+//            query.setFirstResult(firstResult);
+//        }
+//        if (maxResults != -1) {
+//            query.setMaxResults(maxResults);
+//        }
+//        return query.getResultList();
+//    }
+//
+//    /**
+//     * Точный поиск роли по имени в jdbc хранилище.
+//     * @param realm рабочая область
+//     * @param name имя роли для поиска в хранилище
+//     * @return модель роли или null, если роль не найдена
+//     */
+//    @Override
+//    public RoleModel getRealmRole(RealmModel realm, String name) {
+//        System.out.println("\n>>>>>>>>> GET REALM ROLE BY NAME >>>>>>>>>>>");
+//
+//        TypedQuery<UserRoleEntity> query = em.createNamedQuery("getRoleByName", UserRoleEntity.class);
+//        query.setParameter("name", name);
+//        List<UserRoleEntity> roles = query.getResultList();
+//
+//        if (roles.isEmpty()) {
+//            log.info(">>>> невозможно найти роль по имени = {} >>>>", name);
+//            return null;
+//        }
+//        return new UserRoleModel(roles.get(0).getName(), roles.get(0).getDescription(), realm);
+//
+//    }
+//
+//    @Override
+//    public RoleModel getRoleById(RealmModel realm, String id) {
+//        System.out.println("\n>>>>>>>>> GET REALM ROLE BY ID >>>>>>>>>>>");
+//
+//        return getRealmRole(realm, id);
+//    }
+//
+//    /**
+//     * Нечувствительный к регистру поиск ролей, которые содержат заданную строку в названии или описании.
+//     * @param realm Рабочая область
+//     * @param search Искомая подстрока имени или описания роли.
+//     * @param first Первый результат для возврата. Игнорируется, если отрицательный или {@code null}.
+//     * @param max Максимальное количество возвращаемых результатов. Игнорируется, если отрицательный или {@code null}.
+//     * @return Поток ролей области их имя или описание содержит заданную строку поиска. Никогда не возвращает ноль
+//     */
+//    @Override
+//    public Stream<RoleModel> searchForRolesStream(RealmModel realm, String search, Integer first, Integer max) {
+//        System.out.println("\n>>>>>>>>> GET REALM ROLE BY ID >>>>>>>>>>>");
+//
+//        return findRoles(search, first, max).stream()
+//                .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm));
+//    }
+//
+//    @Override
+//    public RoleModel getClientRole(ClientModel client, String name) {
+//        return null;
+//    }
+//
+//    @Override
+//    public Stream<RoleModel> searchForClientRolesStream(ClientModel client, String search, Integer first, Integer max) {
+//        return Stream.empty();
+//    }
+//
+//    /**--------------------------------------------------------------------------------------------------------------
+//     * TODO :: Реализация интерфейса RoleProvider
+//     * Поставщик записей ролей.
+//     * --------------------------------------------------------------------------------------------------------------
+//     */
+//
+//    /**
+//     * Добавляет роль с заданным именем в рабочую область. Внутренний идентификатор роли id будет создан автоматически.
+//     * @param realm рабочая область
+//     * @param id внутренний идентификатор роли или {@code null}, если он должен быть создан базовым хранилищем.
+//     * @param name втроковое имя роли.
+//     * @return модель созданной роли.
+//     */
+//    @Override
+//    public RoleModel addRealmRole(RealmModel realm, String id, String name) {
+//        return new UserRoleModel(name, "", realm);
+//    }
+//
+//    @Override
+//    public Stream<RoleModel> getRealmRolesStream(RealmModel realm, Integer first, Integer max) {
+//        return findAllRoles(first, max).stream()
+//                .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm));
+//    }
+//
+//    @Override
+//    public Stream<RoleModel> getRolesStream(RealmModel realm, Stream<String> ids, String search, Integer first, Integer max) {
+//        return findRoles(search, first, max).stream()
+//                .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm));
+//    }
+//
+//    @Override
+//    public boolean removeRole(RoleModel role) {
+//        return false;
+//    }
+//
+//    @Override
+//    public void removeRoles(RealmModel realm) {
+//    }
+//
+//    @Override
+//    public RoleModel addClientRole(ClientModel client, String id, String name) {
+//        return null;
+//    }
+//
+//    @Override
+//    public Stream<RoleModel> getClientRolesStream(ClientModel client, Integer first, Integer max) {
+//        return null;
+//    }
+//
+//    @Override
+//    public void removeRoles(ClientModel client) {
+//
+//    }
 
 
 
