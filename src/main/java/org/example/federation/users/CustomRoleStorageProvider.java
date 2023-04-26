@@ -147,7 +147,7 @@ public class CustomRoleStorageProvider implements RoleStorageProvider, RoleLooku
 
     @Override
     public RoleModel addRealmRole(RealmModel realm, String id, String name) {
-        return null;
+        return new UserRoleModel(name, "", realm);
     }
 
     @Override

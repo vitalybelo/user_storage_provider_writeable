@@ -2,10 +2,8 @@ package org.example.federation.users;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.federation.users.adapter.UserAdapter;
-import org.example.federation.users.adapter.UserRoleModel;
 import org.example.federation.users.encoder.KeycloakBCryptPasswordEncoder;
 import org.example.federation.users.model.UserEntity;
-import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
 import org.keycloak.credential.CredentialInput;
@@ -17,7 +15,6 @@ import org.keycloak.models.cache.OnUserCache;
 import org.keycloak.models.credential.PasswordCredentialModel;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.UserStorageProvider;
-import org.keycloak.storage.role.RoleLookupProvider;
 import org.keycloak.storage.user.UserLookupProvider;
 import org.keycloak.storage.user.UserQueryProvider;
 import org.keycloak.storage.user.UserRegistrationProvider;
@@ -458,7 +455,6 @@ public class CustomUserStorageProvider implements
     public Stream<UserModel> searchForUserByUserAttributeStream(RealmModel realm, String attrName, String attrValue) {
         return Stream.empty();
     }
-
 
 
 }
