@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
-public class UserAdapter extends AbstractUserAdapterFederatedStorage.Streams {
+public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     private static final String ENABLED_TRUE = "ACTIVE";
     private static final String ENABLED_FALSE = "DELETED";
@@ -223,8 +223,17 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage.Streams {
     }
 
     @Override
-    protected Set<RoleModel> getRoleMappingsInternal() {
+    public Stream<String> getAttributeStream(String name) {
+        Map<String, List<String>> attributes = getAttributes();
+        return (attributes.containsKey(name)) ? attributes.get(name).stream() : Stream.empty();
+    }
 
+    /**
+     * Создает сопоставление ролей для текущего пользователя, фактически добавляет набор ролей для пользователя
+     * @return Set набор ролей в виде экземпляров класса UserRoleModel (имплементация от UserModel)
+     */
+    @Override
+    protected Set<RoleModel> getRoleMappingsInternal() {
         if (entity.getRoleList() != null) {
             return entity.getRoleList().stream()
                     .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm)).collect(Collectors.toSet());
@@ -232,6 +241,14 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage.Streams {
         return Set.of();
     }
 
+    /**
+     * Должны ли группы области по умолчанию добавляться к вызову getGroups()? Если ваш поставщик
+     * хранилища не управляет сопоставлениями групп, рекомендуется, чтобы этот метод возвращал значение true.
+     */
+    @Override
+    protected boolean appendDefaultGroups() {
+        return true;
+    }
 
 
 }
