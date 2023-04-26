@@ -15,7 +15,7 @@ import java.util.*;
 @NamedQueries({
         @NamedQuery(name="getAllRoles", query="select r from UserRoleEntity r"),
         @NamedQuery(name="getRoleByName", query="select r from UserRoleEntity r where r.name = :name"),
-        @NamedQuery(name="searchForRole", query="select r from UserRoleEntity r where " +
+        @NamedQuery(name="searchForRoles", query="select r from UserRoleEntity r where " +
                 "( lower(r.name) like :search or lower(r.description) like :search) order by r.name")
 
 })

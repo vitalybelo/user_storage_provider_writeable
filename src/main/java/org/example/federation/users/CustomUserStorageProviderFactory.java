@@ -13,13 +13,13 @@ public class CustomUserStorageProviderFactory implements UserStorageProviderFact
 
     @Override
     public CustomUserStorageProvider create(KeycloakSession session, ComponentModel model) {
-        log.info(">>>>>> Creating factory >>>>>>");
+        log.info(">>>>>> Creating User factory >>>>>>");
         return new CustomUserStorageProvider(session, model);
     }
 
     @Override
     public void onCreate(KeycloakSession session, RealmModel realm, ComponentModel model) {
-        log.info(">>>> ON CREATE >>>>");
+        log.info(">>>>>> OnCreat User factory >>>>>>");
     }
 
     @Override
@@ -34,7 +34,7 @@ public class CustomUserStorageProviderFactory implements UserStorageProviderFact
 
     @Override
     public void close() {
-        log.info("<<<<<< Closing factory <<<<<<");
+        log.info("<<<<<< Closing User factory <<<<<<");
     }
 
 

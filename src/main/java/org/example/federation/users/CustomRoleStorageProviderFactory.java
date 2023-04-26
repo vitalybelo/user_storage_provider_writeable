@@ -12,7 +12,7 @@ public class CustomRoleStorageProviderFactory implements RoleStorageProviderFact
     public static final String PROVIDER_ID = "JDBC ROLES";
     @Override
     public CustomRoleStorageProvider create(KeycloakSession keycloakSession, ComponentModel componentModel) {
-        log.info(">>>>>> Creating factory >>>>>>");
+        log.info(">>>>>> Creating Roles factory >>>>>>");
         return new CustomRoleStorageProvider(keycloakSession, componentModel);
     }
 
@@ -23,7 +23,7 @@ public class CustomRoleStorageProviderFactory implements RoleStorageProviderFact
 
     @Override
     public void onCreate(KeycloakSession session, RealmModel realm, ComponentModel model) {
-        log.info(">>>> OnCreate called >>>>");
+        log.info(">>>> OnCreate Roles factory >>>>");
     }
 
     @Override
