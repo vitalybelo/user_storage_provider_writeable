@@ -15,9 +15,7 @@ import org.keycloak.models.cache.OnUserCache;
 import org.keycloak.models.credential.PasswordCredentialModel;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.UserStorageProvider;
-import org.keycloak.storage.user.UserLookupProvider;
-import org.keycloak.storage.user.UserQueryProvider;
-import org.keycloak.storage.user.UserRegistrationProvider;
+import org.keycloak.storage.user.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
@@ -41,12 +39,21 @@ public class CustomUserStorageProvider implements
     protected EntityManager em;
     protected ComponentModel model;
     protected KeycloakSession session;
+    protected CustomRoleStorage roles;
     private final KeycloakBCryptPasswordEncoder encoder = new KeycloakBCryptPasswordEncoder();
 
     CustomUserStorageProvider(KeycloakSession session, ComponentModel model) {
         this.session = session;
         this.model = model;
-        em = session.getProvider(JpaConnectionProvider.class, "user-store").getEntityManager();
+        this.em = session.getProvider(JpaConnectionProvider.class, "user-store").getEntityManager();
+        this.roles = new CustomRoleStorage(session, model, em);
+        // метод обновляет список ролей из jdbc хранилища и добавляет в realm каких там нет
+        roles.lazyAddRealmRoles(session.getContext().getRealm());
+    }
+
+    @Override
+    public void preRemove(RealmModel realm, RoleModel role) {
+        UserStorageProvider.super.preRemove(realm, role);
     }
 
     @Override
@@ -455,11 +462,5 @@ public class CustomUserStorageProvider implements
     public Stream<UserModel> searchForUserByUserAttributeStream(RealmModel realm, String attrName, String attrValue) {
         return Stream.empty();
     }
-
-
-
-
-
-
 
 }

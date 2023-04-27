@@ -2,6 +2,7 @@ package org.example.federation.users;
 
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.component.ComponentModel;
+import org.keycloak.component.ComponentValidationException;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.storage.UserStorageProviderFactory;
@@ -36,6 +37,5 @@ public class CustomUserStorageProviderFactory implements UserStorageProviderFact
     public void close() {
         log.info("<<<<<< Closing User factory <<<<<<");
     }
-
 
 }
