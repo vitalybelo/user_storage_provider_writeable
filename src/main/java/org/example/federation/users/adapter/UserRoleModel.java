@@ -3,7 +3,6 @@ package org.example.federation.users.adapter;
 import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.models.*;
-import org.keycloak.storage.StorageId;
 
 import java.util.List;
 import java.util.Map;
