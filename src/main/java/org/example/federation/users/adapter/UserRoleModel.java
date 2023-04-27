@@ -1,7 +1,5 @@
 package org.example.federation.users.adapter;
 
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.models.*;
@@ -10,12 +8,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-@AllArgsConstructor
-@RequiredArgsConstructor
 public class UserRoleModel implements RoleModel {
 
     protected RealmModel realm;
     protected UserRoleEntity entity;
+
+    public UserRoleModel(UserRoleEntity entity, RealmModel realm) {
+        this.entity = entity;
+        this.realm = realm;
+    }
 
     @Override
     public String getName() {
