@@ -285,6 +285,24 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     /**
+     * Несмотря на то, что он Deprecated, этот метод по сути является главным для получения ролей пользователя.
+     * Сначала метод получает сопоставления ролей из федеративного хранилища (LDAP если подключены).
+     * Затем добавляет роли по умолчанию (отключается переопределением метода appendDefaultRolesToRoleMappings().
+     * И в конце вызывает метод getRoleMappingsInternal() для добавления ролей от провайдера. Мы должны обязательно
+     * переопределить метод getRoleMappingsInternal(), чтобы добавить в сопоставление - роли от нашего провайдера
+     * @return список всех назначенных ролей для пользователя в keycloak. Именно
+     */
+    @Override
+    public Set<RoleModel> getRoleMappings() {
+        Set<RoleModel> set = new HashSet<>(getFederatedRoleMappings());
+        if (appendDefaultRolesToRoleMappings()) {
+            set.addAll(realm.getDefaultRole().getCompositesStream().collect(Collectors.toSet()));
+        }
+        set.addAll(getRoleMappingsInternal());
+        return set;
+    }
+
+    /**
      * Возвращает поток ролей области, которые непосредственно установлены для этого объекта.
      * <br>По сути выполняется<br>
      * getRoleMappings().stream()<br>
@@ -312,8 +330,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
      */
     @Override
     protected boolean appendDefaultRolesToRoleMappings() {
-        // TODO - поменять на true для добавления ролей по умолчанию
-        return false;
+        return true;
     }
 
 
