@@ -279,7 +279,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     protected Set<RoleModel> getRoleMappingsInternal() {
         if (entity.getRoleList() != null) {
             return entity.getRoleList().stream()
-                    .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm)).collect(Collectors.toSet());
+                    .map(role -> new UserRoleModel(role, realm)).collect(Collectors.toSet());
         }
         return Set.of();
     }
@@ -298,7 +298,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     /**
      * Должны ли группы области по умолчанию добавляться к вызову getGroups()?
-     * Если ваш поставщик  хранилища не управляет сопоставлениями групп, рекомендуется возвращать true.
+     * Если ваш поставщик хранилища не управляет сопоставлениями групп, рекомендуется возвращать true.
      */
     @Override
     protected boolean appendDefaultGroups() {

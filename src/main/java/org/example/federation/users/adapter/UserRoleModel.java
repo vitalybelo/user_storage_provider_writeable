@@ -1,5 +1,7 @@
 package org.example.federation.users.adapter;
 
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.models.*;
@@ -8,43 +10,37 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserRoleModel implements RoleModel {
 
+    protected RealmModel realm;
     protected UserRoleEntity entity;
-    private String name;
-    private String description;
-    private final RealmModel realm;
-
-    public UserRoleModel(String name, String description, RealmModel realm) {
-        this.name = name;
-        this.description = description;
-
-        this.realm = realm;
-    }
 
     @Override
     public String getName() {
-        return name;
+        return entity.getName();
     }
 
     @Override
     public void setName(String name) {
-        this.name = name;
+        entity.setName(name);
     }
 
     @Override
     public String getDescription() {
-        return description;
+        return entity.getDescription();
     }
 
     @Override
     public void setDescription(String description) {
-        this.description = description;
+        entity.setDescription(description);
     }
 
     @Override
     public String getId() {
-        return name;
+        return entity.getName();
+        //return String.valueOf(entity.getId());
     }
 
     @Override
@@ -87,7 +83,7 @@ public class UserRoleModel implements RoleModel {
 
     @Override
     public boolean hasRole(RoleModel role) {
-        return this.equals(role) || this.name.equals(role.getName());
+        return this.equals(role) || entity.getName().equals(role.getName());
     }
 
     @Override
@@ -114,7 +110,6 @@ public class UserRoleModel implements RoleModel {
 
     @Override
     public Map<String, List<String>> getAttributes() {
-
         MultivaluedHashMap<String, String> attributes = new MultivaluedHashMap<>();
         attributes.add("RIGHTS 1", "entity.getUsername()");
         attributes.add("RIGHTS 2", "entity.getFirstName()");

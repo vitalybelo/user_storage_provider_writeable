@@ -114,7 +114,7 @@ public class CustomRoleStorageProvider implements
             log.info(">>>> невозможно найти роль с именем = {} >>>>", name);
             return null;
         }
-        return new UserRoleModel(roles.getName(), roles.getDescription(), realm);
+        return new UserRoleModel(roles, realm);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class CustomRoleStorageProvider implements
         System.out.println(">>>>>>>>>>> ID = " + search);
         System.out.println();
         return findRoles(search, first, max).stream()
-                .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm));
+                .map(role -> new UserRoleModel(role, realm));
     }
 
     @Override
@@ -147,12 +147,9 @@ public class CustomRoleStorageProvider implements
     }
 
 
-
-
-
     @Override
     public RoleModel addRealmRole(RealmModel realm, String id, String name) {
-        return new UserRoleModel(name, "", realm);
+        return null;
     }
 
     @Override
@@ -161,13 +158,13 @@ public class CustomRoleStorageProvider implements
         System.out.println(">>>>>>>>>>> ВЫЗОВ МЕТОДА getRealmRolesStream() >>>>>>>>>>>>");
         System.out.println();
         return findAllRoles(first, max).stream()
-                .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm));
+                .map(role -> new UserRoleModel(role, realm));
     }
 
     @Override
     public Stream<RoleModel> getRolesStream(RealmModel realm, Stream<String> ids, String search, Integer first, Integer max) {
         return findAllRoles(first, max).stream()
-                .map(role -> new UserRoleModel(role.getName(), role.getDescription(), realm));
+                .map(role -> new UserRoleModel(role, realm));
     }
 
     @Override
