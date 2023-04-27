@@ -41,7 +41,6 @@ public class UserRoleModel implements RoleModel {
     @Override
     public String getId() {
         return entity.getName();
-        //return String.valueOf(entity.getId());
     }
 
     @Override
