@@ -19,6 +19,7 @@ public class CustomRoleStorageProvider implements
         RoleStorageProvider,
         RoleLookupProvider,
         RoleProvider
+
 {
 
     protected EntityManager em;
@@ -149,7 +150,10 @@ public class CustomRoleStorageProvider implements
 
     @Override
     public RoleModel addRealmRole(RealmModel realm, String id, String name) {
-        return null;
+        UserRoleEntity roleEntity = new UserRoleEntity();
+        roleEntity.setName("ROLE 1");
+        roleEntity.setDescription("DESCRIPTION 1");
+        return new UserRoleModel(roleEntity, realm);
     }
 
     @Override
@@ -163,7 +167,7 @@ public class CustomRoleStorageProvider implements
 
     @Override
     public Stream<RoleModel> getRolesStream(RealmModel realm, Stream<String> ids, String search, Integer first, Integer max) {
-        return findAllRoles(first, max).stream()
+        return findRoles(search, first, max).stream()
                 .map(role -> new UserRoleModel(role, realm));
     }
 
