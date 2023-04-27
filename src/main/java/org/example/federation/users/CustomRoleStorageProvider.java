@@ -15,7 +15,10 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @Slf4j
-public class CustomRoleStorageProvider implements RoleStorageProvider, RoleLookupProvider, RoleProvider
+public class CustomRoleStorageProvider implements
+        RoleStorageProvider,
+        RoleLookupProvider,
+        RoleProvider
 {
 
     protected EntityManager em;
@@ -57,6 +60,7 @@ public class CustomRoleStorageProvider implements RoleStorageProvider, RoleLooku
         System.out.println();
         System.out.println(">>>>>>>>>>> ВЫЗОВ МЕТОДА FIND_ALL_ROLES >>>>>>>>>>>>");
         System.out.println();
+
         return findAllRoles(-1, -1);
     }
 
@@ -71,8 +75,9 @@ public class CustomRoleStorageProvider implements RoleStorageProvider, RoleLooku
         System.out.println();
         System.out.println(">>>>>>>>>>> ВЫЗОВ МЕТОДА FIND_ROLES >>>>>>>>>>>>");
         System.out.println();
+
         if (search.equalsIgnoreCase("*")) {
-            return findAllRoles(firstResult, maxResults);
+            return findAllRoles(-1, -1);
         }
         TypedQuery<UserRoleEntity> query = em.createNamedQuery("searchForRoles", UserRoleEntity.class);
         query.setParameter("search", "%" + search.toLowerCase() + "%");
@@ -104,12 +109,12 @@ public class CustomRoleStorageProvider implements RoleStorageProvider, RoleLooku
         System.out.println();
         TypedQuery<UserRoleEntity> query = em.createNamedQuery("getRoleByName", UserRoleEntity.class);
         query.setParameter("name", name);
-        List<UserRoleEntity> roles = query.getResultList();
-        if (roles.isEmpty()) {
+        UserRoleEntity roles = query.getSingleResult();
+        if (roles == null) {
             log.info(">>>> невозможно найти роль с именем = {} >>>>", name);
             return null;
         }
-        return new UserRoleModel(roles.get(0).getName(), roles.get(0).getDescription(), realm);
+        return new UserRoleModel(roles.getName(), roles.getDescription(), realm);
     }
 
     @Override

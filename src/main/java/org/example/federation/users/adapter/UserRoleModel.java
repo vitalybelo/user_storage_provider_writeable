@@ -1,5 +1,7 @@
 package org.example.federation.users.adapter;
 
+import org.example.federation.users.model.UserRoleEntity;
+import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.models.*;
 
 import java.util.List;
@@ -8,6 +10,7 @@ import java.util.stream.Stream;
 
 public class UserRoleModel implements RoleModel {
 
+    protected UserRoleEntity entity;
     private String name;
     private String description;
     private final RealmModel realm;
@@ -15,6 +18,7 @@ public class UserRoleModel implements RoleModel {
     public UserRoleModel(String name, String description, RealmModel realm) {
         this.name = name;
         this.description = description;
+
         this.realm = realm;
     }
 
@@ -105,12 +109,16 @@ public class UserRoleModel implements RoleModel {
 
     @Override
     public Stream<String> getAttributeStream(String name) {
-        return null;
+        return Stream.empty();
     }
 
     @Override
     public Map<String, List<String>> getAttributes() {
-        return null;
+
+        MultivaluedHashMap<String, String> attributes = new MultivaluedHashMap<>();
+        attributes.add("RIGHTS 1", "entity.getUsername()");
+        attributes.add("RIGHTS 2", "entity.getFirstName()");
+        return attributes;
     }
 
 

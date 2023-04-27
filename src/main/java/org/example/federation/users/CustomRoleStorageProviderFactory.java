@@ -9,7 +9,7 @@ import org.keycloak.storage.role.RoleStorageProviderFactory;
 @Slf4j
 public class CustomRoleStorageProviderFactory implements RoleStorageProviderFactory<CustomRoleStorageProvider> {
 
-    public static final String PROVIDER_ID = "JDBC ROLES";
+    public static final String PROVIDER_ID = "role-storage-provider";
     @Override
     public CustomRoleStorageProvider create(KeycloakSession keycloakSession, ComponentModel componentModel) {
         log.info(">>>>>> Creating Roles factory >>>>>>");

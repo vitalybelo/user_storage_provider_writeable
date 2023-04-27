@@ -138,7 +138,10 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     /**
-     * Устанавливает кастомный аттрибут пользователя из jdbc федеративного хранилища в карточку пользователя keycloak
+     * Устанавливает кастомный аттрибут для пользователя.
+     * Метод вызывается после того, как в консоли администратора при редактировании аттрибутов пользователя была
+     * нажата кнопка "сохранить". Метод проверяет соответствует ли имя аттрибута реальному полю из кастомного хранилища.
+     * Если соответствует, выполняется изменения значения аттрибута в классе UserEntity и синхронно в jdbc хранилище.
      * @param name название аттрибута
      * @param value значение аттрибута
      * @return true если ни один из кастомных аттрибутов не был установлен и требуется установка методом из super
@@ -156,12 +159,25 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         }
     }
 
+    /**
+     * Установить одно значение указанного атрибута. Это метод вызывает другой метод для проверки имени на соответствие
+     * - isCustomAttributeMissedSetup(), который непосредственно меняет значение аттрибута в классе UserEntity и
+     * сохраняет изменения в jdbc хранилище, если указанное имя атрибута соответствует полю из внешнего хранилища
+     * @param name имя аттрибута
+     * @param value новое значение аттрибута
+     */
     @Override
     public void setSingleAttribute(String name, String value) {
         if (isCustomAttributeMissedSetup(name, value))
             super.setSingleAttribute(name, value);
     }
 
+    /**
+     * Удаляет одно значение указанного атрибута. Это метод вызывает другой метод для проверки имени на соответствие
+     * - isCustomAttributeMissedSetup(), который непосредственно меняет значение аттрибута в классе UserEntity на null
+     * и сохраняет изменения в jdbc хранилище, если указанное имя атрибута соответствует полю из внешнего хранилища
+     * @param name имя аттрибута
+     */
     @Override
     public void removeAttribute(String name) {
         if (isCustomAttributeMissedSetup(name, null)) {
@@ -169,6 +185,12 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         }
     }
 
+    /**
+     * Инициализирует аттрибуты пользователя в модели keycloak.
+     * Метод используется для последовательной инициализации всех аттрибутов пользователя из карты атрибутов
+     * @param name - имя атрибута
+     * @param values - список значения, из которого используется первый элемент
+     */
     @Override
     public void setAttribute(String name, List<String> values) {
 
@@ -185,6 +207,12 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         }
     }
 
+    /**
+     * Возвращает значение атрибута. Метод необходим для отображения атрибутов в консоли keycloak
+     * @param name имя атрибута
+     * @return null, если нет никакого значения указанного атрибута или первого значения в противном случае.
+     * Не генерировать исключение, если есть еще значения атрибута
+     */
     @Override
     public String getFirstAttribute(String name) {
 
@@ -200,6 +228,13 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         }
     }
 
+    /**
+     * Это метод возвращает весь список атрибутов пользователя для отображения в консоли keycloak.
+     * Здесь необходимо указать 1 обязательный атрибут - username, 3 необязательных стандартных атрибутов keycloak
+     * и обязательно весь список кастомных атрибутов пользователя, если хотите чтобы они были добавлены в карточку
+     * пользователя в административной консоли keycloak
+     * @return - MultivaluedHashMap карту со списком всех атрибутов и их значений
+     */
     @Override
     public Map<String, List<String>> getAttributes() {
 
@@ -222,6 +257,11 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         return attributes;
     }
 
+    /**
+     * Получает все значения, связанные с указанным именем атрибута.
+     * @param name имя атрибута
+     * @return список всех значений для имени атрибута
+     */
     @Override
     public Stream<String> getAttributeStream(String name) {
         Map<String, List<String>> attributes = getAttributes();
@@ -229,7 +269,10 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     /**
-     * Создает сопоставление ролей для текущего пользователя, фактически добавляет набор ролей для пользователя
+     * Создает сопоставление ролей для текущего пользователя, фактически добавляет набор ролей для пользователя.
+     * Роли при этом считываются из внешнего хранилища, где уже существует сопоставление ролей каждому пользователю.
+     * Роли загружаются в список ролей класса UserEntity из таблицы ролей userroles по сопоставлению @ManyToMany.
+     * Keycloak обязательно вызовет отдельную транзакцию для считывания ролей, поэтому можно использовать LAZY
      * @return Set набор ролей в виде экземпляров класса UserRoleModel (имплементация от UserModel)
      */
     @Override
@@ -242,13 +285,37 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     /**
-     * Должны ли группы области по умолчанию добавляться к вызову getGroups()? Если ваш поставщик
-     * хранилища не управляет сопоставлениями групп, рекомендуется, чтобы этот метод возвращал значение true.
+     * Возвращает поток ролей области, которые непосредственно установлены для этого объекта.
+     * <br>По сути выполняется<br>
+     * getRoleMappings().stream()<br>
+     * .filter(RoleUtils::isRealmRole).collect(Collectors.toSet());<br>
+     * @return поток ролей области, которые непосредственно установлены для этого объекта
+     */
+    @Override
+    public Stream<RoleModel> getRealmRoleMappingsStream() {
+        return super.getRealmRoleMappingsStream();
+    }
+
+    /**
+     * Должны ли группы области по умолчанию добавляться к вызову getGroups()?
+     * Если ваш поставщик  хранилища не управляет сопоставлениями групп, рекомендуется возвращать true.
      */
     @Override
     protected boolean appendDefaultGroups() {
         return true;
     }
+
+    /**
+     * Следует ли добавлять роли области по умолчанию к вызову getRoleMappings()?
+     * Если ваш поставщик хранилища не управляет всеми сопоставлениями ролей, рекомендуется возвращать true.
+     * @return true - добавлять к сопоставлению ролей для пользователя роли по умолчанию, false - не добавлять
+     */
+    @Override
+    protected boolean appendDefaultRolesToRoleMappings() {
+        // TODO - поменять на true для добавления ролей по умолчанию
+        return false;
+    }
+
 
 
 }
