@@ -1,7 +1,9 @@
 package org.example.federation.users.adapter;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.federation.users.CustomRoleStorage;
 import org.example.federation.users.model.UserEntity;
+import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.credential.LegacyUserCredentialManager;
@@ -29,9 +31,11 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     protected UserEntity entity;
     protected String keycloakId;
+    protected KeycloakSession session;
 
     public UserAdapter(KeycloakSession session, RealmModel realm, ComponentModel model, UserEntity entity) {
         super(session, realm, model);
+        this.session = session;
         this.entity = entity;
         keycloakId = StorageId.keycloakId(model, String.valueOf(entity.getAccountId()));
     }
@@ -277,8 +281,13 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
      */
     @Override
     protected Set<RoleModel> getRoleMappingsInternal() {
-        if (entity.getRoleList() != null) {
-            return entity.getRoleList().stream()
+
+        Set<UserRoleEntity> entitySet = entity.getRoleList();
+        CustomRoleStorage roleStorage = new CustomRoleStorage(session);
+
+        if (entitySet != null && !entitySet.isEmpty()) {
+            roleStorage.AddRolesToRealm(entitySet);
+            return entitySet.stream()
                     .map(role -> new UserRoleModel(role, realm)).collect(Collectors.toSet());
         }
         return Set.of();
