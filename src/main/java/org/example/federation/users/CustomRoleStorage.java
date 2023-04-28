@@ -7,9 +7,8 @@ import org.keycloak.models.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Set;
 
 @Slf4j
 public class CustomRoleStorage {

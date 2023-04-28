@@ -96,7 +96,7 @@ public class CustomUserStorageProvider implements
      * @param realm модель области
      * @param username имя пользователя, чувствительно к регистру
      * @return найденная модель пользователя или null, если такой пользователь не существует
-     * @Throws ModelDuplicateException — при поиске в режиме без учета регистра и наличии большего количества
+     * @throws ModelDuplicateException при поиске в режиме без учета регистра и наличии большего количества
      * пользователей с именем пользователя, которое отличается только регистром.
      */
     @Override
@@ -118,7 +118,7 @@ public class CustomUserStorageProvider implements
      * @param realm модель области
      * @param email email адрес для поиска
      * @return найденная модель пользователя или null, если такой пользователь не существует
-     * @Throws ModelDuplicateException — когда есть больше пользователей с одним и тем же адресом электронной почты
+     * @throws ModelDuplicateException когда есть больше пользователей с одним и тем же адресом электронной почты
      */
     @Override
     public UserModel getUserByEmail(RealmModel realm, String email)
@@ -297,7 +297,7 @@ public class CustomUserStorageProvider implements
      * @return экземпляр класса UserAdapter для переданной пользовательской модели
      */
     public UserAdapter getUserAdapter(UserModel user) {
-        UserAdapter adapter = null;
+        UserAdapter adapter;
         if (user instanceof CachedUserModel) {
             adapter = (UserAdapter)((CachedUserModel)user).getDelegateForUpdate();
         } else {
