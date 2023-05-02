@@ -47,8 +47,10 @@ public class CustomUserStorageProvider implements
         this.model = model;
         this.em = session.getProvider(JpaConnectionProvider.class, "user-store").getEntityManager();
         this.roles = new CustomRoleStorage(session);
+
         // метод обновляет список ролей из jdbc хранилища и добавляет в realm каких там нет
-        roles.AddRolesToRealmAll();
+        //roles.AddRealmRolesAll();
+        //roles.AddRealmRolesForUsers("kotik");
     }
 
     @Override

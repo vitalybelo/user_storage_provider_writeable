@@ -1,12 +1,15 @@
 package org.example.federation.users;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.federation.users.model.UserEntity;
 import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
 import org.keycloak.models.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Set;
 
@@ -74,12 +77,39 @@ public class CustomRoleStorage {
 
     /**
      * Добавление всех имеющихся ролей в рабочую область (realm).
-     * Метод сначала вызывает процедуру findAllRoles() считывания всех ролей из внешнего jdbc хранилища в коллекцию.
+     * Метод вызывает процедуру findAllRoles() для считывания всех ролей из внешнего jdbc хранилища.
      * Затем передаёт эту коллекцию в процедуру AddRolesToRealm(), которая последовательно проверяет наличие
      * каждой роли в рабочей области, и добавляет роль только если там ее нет.
      */
-    public void AddRolesToRealmAll() {
-        //AddRolesToRealm(findAllRoles());
+    public void AddRealmRolesAll() {
+        AddRealmRoles(findAllRoles());
+    }
+
+    /**
+     * Добавляет в рабочую область роли для пользователей. Список пользователей задается параметром маски
+     * поиска пользователей во внешнем jdbc хранилище. Если задан параметр "*", осуществляется считывание ролей для
+     * всех пользователей. В обратном случае, из внешнего хранилища выбираются пользователи, имена или почта которых
+     * содержит маску поиска.
+     * @param search строковая маска поиска пользователей, "*" для загрузки всех пользователей
+     */
+    public void AddRealmRolesForUsers(String search) {
+
+        TypedQuery<UserEntity> query;
+        if (search.equalsIgnoreCase("*")) {
+            query = em.createNamedQuery("getAllUsers", UserEntity.class);
+        } else {
+            query = em.createNamedQuery("searchForUser", UserEntity.class);
+            query.setParameter("search", "%" + search.toLowerCase() + "%");
+        }
+        List<UserEntity> usersList = query.getResultList();
+
+        if (!usersList.isEmpty()) {
+            Set<UserRoleEntity> rolesList = new HashSet<>();
+            for (UserEntity user : usersList) {
+                rolesList.addAll(user.getRoleList());
+            }
+            AddRealmRoles(rolesList);
+        }
     }
 
     /**
@@ -87,24 +117,23 @@ public class CustomRoleStorage {
      * Метод предварительно проверяет наличие в realm каждой отдельной роли. Отсутствующие роли добавляются.
      * @param entitySet список ролей (экземпляров класса UserRoleEntity) для загрузки в рабочую область (realm)
      */
-    public void AddRolesToRealm(Set<UserRoleEntity> entitySet) {
+    public void AddRealmRoles(Set<UserRoleEntity> entitySet) {
 
         for (UserRoleEntity role : entitySet) {
-
-            String role_name = role.getName();
-            RoleModel role_found = realm.getRole(role_name);
-
-            if (role_found == null) {
+            String roleName = role.getName();
+            RoleModel realmRole = realm.getRole(roleName);
+            if (realmRole == null) {
                 // значит такой роли нет в списке нашего Realm - добавляем по имени
-                RoleModel added = realm.addRole(role_name);
+                RoleModel addedRole = realm.addRole(roleName);
                 // теперь добавляем описание роли если оно было заранее задано
-                String role_description = role.getDescription();
-                if (!role_description.isBlank()) {
-                    added.setDescription(role_description);
+                String roleDescription = role.getDescription();
+                if (!roleDescription.isBlank()) {
+                    addedRole.setDescription(roleDescription);
                 }
+                // TODO - заменить на алгоритм добавления аттрибутов ролей или убрать совсем
                 // теперь добавляем аттрибуты, если они заданы для роли
-                added.setSingleAttribute("A1", "value 1");
-                added.setSingleAttribute("A2", "value 2");
+                addedRole.setSingleAttribute("A1", "value 1");
+                addedRole.setSingleAttribute("A2", "value 2");
             }
         }
 
