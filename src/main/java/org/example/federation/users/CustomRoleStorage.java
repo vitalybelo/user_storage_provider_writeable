@@ -1,8 +1,10 @@
 package org.example.federation.users;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.example.federation.users.model.UserEntity;
 import org.example.federation.users.model.UserRoleEntity;
+import org.graalvm.nativeimage.IsolateThread;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
 import org.keycloak.models.*;
 
@@ -76,6 +78,22 @@ public class CustomRoleStorage {
     }
 
     /**
+     * Загружает из внешнего хранилища запись по точному названию роли (чувствительно к регистру).
+     * @param name название роли, которую необходимо найти и загрузить (в точности с регистром букв)
+     * @return экземпляр класса UserRoleEntity в случае успешной загрузки, или null если роль не найдена
+     */
+    public UserRoleEntity findRoleByName(@NonNull String name) {
+
+        TypedQuery<UserRoleEntity> query = em.createNamedQuery("getRoleByName",UserRoleEntity.class);
+        query.setParameter("name", name);
+        UserRoleEntity userRole = query.getSingleResult();
+        if (userRole == null) {
+            log.info(">>>>> Невозможно найти роль по названию = {} >>>>>", name);
+        }
+        return userRole;
+    }
+
+    /**
      * Добавление всех имеющихся ролей в рабочую область (realm).
      * Метод вызывает процедуру findAllRoles() для считывания всех ролей из внешнего jdbc хранилища.
      * Затем передаёт эту коллекцию в процедуру AddRolesToRealm(), которая последовательно проверяет наличие
@@ -120,20 +138,18 @@ public class CustomRoleStorage {
     public void AddRealmRoles(Set<UserRoleEntity> entitySet) {
 
         for (UserRoleEntity role : entitySet) {
+            // пробуем получить роль из области
             String roleName = role.getName();
             RoleModel realmRole = realm.getRole(roleName);
+            // если роль из области = null, создаем роль в области
             if (realmRole == null) {
-                // значит такой роли нет в списке нашего Realm - добавляем по имени
-                RoleModel addedRole = realm.addRole(roleName);
-                // теперь добавляем описание роли если оно было заранее задано
-                String roleDescription = role.getDescription();
-                if (!roleDescription.isBlank()) {
-                    addedRole.setDescription(roleDescription);
-                }
+                realmRole = realm.addRole(roleName);
+                realmRole.setDescription(role.getDescription());
+
                 // TODO - заменить на алгоритм добавления аттрибутов ролей или убрать совсем
                 // теперь добавляем аттрибуты, если они заданы для роли
-                addedRole.setSingleAttribute("A1", "value 1");
-                addedRole.setSingleAttribute("A2", "value 2");
+                realmRole.setSingleAttribute("A1", "value 1");
+                realmRole.setSingleAttribute("A2", "value 2");
             }
         }
 

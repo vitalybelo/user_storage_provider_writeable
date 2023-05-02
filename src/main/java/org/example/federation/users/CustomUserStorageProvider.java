@@ -49,8 +49,8 @@ public class CustomUserStorageProvider implements
         this.roles = new CustomRoleStorage(session);
 
         // метод обновляет список ролей из jdbc хранилища и добавляет в realm каких там нет
-        //roles.AddRealmRolesAll();
-        //roles.AddRealmRolesForUsers("kotik");
+        log.info(">>>>> Read all roles from external database >>>>>");
+        roles.AddRealmRolesAll();
     }
 
     @Override

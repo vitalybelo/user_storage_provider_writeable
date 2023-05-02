@@ -1,13 +1,14 @@
 package org.example.federation.users.adapter;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.example.federation.users.CustomRoleStorage;
 import org.example.federation.users.model.UserEntity;
 import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.credential.LegacyUserCredentialManager;
 import org.keycloak.models.*;
-import org.keycloak.models.utils.RoleUtils;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.adapter.AbstractUserAdapterFederatedStorage;
 
@@ -32,12 +33,35 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     protected UserEntity entity;
     protected String keycloakId;
     protected KeycloakSession session;
+    private static Long counter = 0L;
 
     public UserAdapter(KeycloakSession session, RealmModel realm, ComponentModel model, UserEntity entity) {
+
         super(session, realm, model);
         this.session = session;
         this.entity = entity;
         keycloakId = StorageId.keycloakId(model, String.valueOf(entity.getAccountId()));
+
+        // Сопоставление ролей для пользователя
+        log.info(">>>>> Cопоставление ролей для: {} (счетчик = {})", entity.getUsername(), ++counter);
+        for (UserRoleEntity role : entity.getRoleList())
+        {
+            String roleName = role.getName();
+            RoleModel realmRole = realm.getRole(role.getName());
+            if (realmRole == null) {
+                realmRole = realm.addRole(roleName);
+                realmRole.setDescription(role.getDescription());
+            }
+            Optional<RoleModel> optional =
+                    getRealmRoleMappingsStream().filter(r-> r.getName().equals(roleName)).findFirst();
+            // TODO - попробовать переделать на hasRole()
+            // !hasRole(realmRole)
+            if (optional.isEmpty()) {
+                log.info(">>>>> Добавляем роль {} :: для пользователя: {} ", roleName, entity.getUsername());
+                grantRole(realmRole);
+            }
+        }
+
     }
 
     @Override
@@ -281,42 +305,17 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
      */
     @Override
     protected Set<RoleModel> getRoleMappingsInternal() {
+        return Set.of();
+    }
 
-        Set<UserRoleEntity> entitySet = entity.getRoleList();
-
-        System.out.println();
-        System.out.println(">>>>>>>>> ROLE INTERNAL >>>>>>>>>>>>>>");
-        System.out.println(">>>>>>>>> Пользователь :: " + entity.getUsername());
-        System.out.println(">>>>>>>>> Количество ролей :: " + entitySet.size());
-        for (UserRoleEntity role : entitySet) {
-            System.out.println("ROLE name = " + role.getName());
-        }
-        System.out.println();
-
-        for (UserRoleEntity role : entitySet) {
-
-            String roleName = role.getName();
-            RoleModel realmRole = realm.getRole(roleName);
-
-            if (realmRole == null) {
-                // значит такой роли нет в списке нашего Realm - добавляем по имени
-                RoleModel addedRole = realm.addRole(roleName);
-                // теперь добавляем описание роли если оно было заранее задано
-                String roleDescription = role.getDescription();
-                if (!roleDescription.isBlank()) {
-                    addedRole.setDescription(roleDescription);
-                }
-            }
-
-            RoleModel roleModel = new UserRoleModel(role, realm);
-            if (!RoleUtils.isRealmRole(roleModel, realm)) {
-                System.out.println(">>>>>>>>>>> GRANT >>>>>>>>>>>");
-                grantRole(roleModel);
-            }
-        }
-
-        if (!entitySet.isEmpty()) {
-            return entitySet.stream()
+    /**
+     * Возвращает список ролей пользователя.
+     * @return Set набор экземпляров класса RoleModel
+     */
+    public Set<RoleModel> getRolesAsSet() {
+        Set<UserRoleEntity> rolesList = entity.getRoleList();
+        if (rolesList != null && !rolesList.isEmpty()) {
+            return rolesList.stream()
                     .map(role -> new UserRoleModel(role, realm)).collect(Collectors.toSet());
         }
         return Set.of();
@@ -371,27 +370,54 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         return true;
     }
 
+    /**
+     * Удаляет сопоставления роли для текущего пользователя. Метод сначала ищет совпадение в списке уже
+     * назначенных ролей этого пользователя. Если совпадение найдено, роль удаляется из списка, далее из
+     * сопоставлений внутри keycloak. Синхронно удаляется сопоставление из внешнего хранилища.
+     * (таблица privfastsm.account_role)
+     * @param role модель роли для удаления
+     */
     @Override
     public void deleteRoleMapping(RoleModel role) {
-        System.out.println("\n>>>>>>>>>>>>>>> DELETE ROLE MAPPING >>>>>>>>>>>>>" + role.getName() + "\n");
+
+        Optional<UserRoleEntity> optional = entity.getRoleList().stream()
+                .filter(r-> Objects.equals(r.getName(), role.getName())).findFirst();
+
+        optional.ifPresent(userRole -> {
+            entity.getRoleList().remove(userRole);
+        });
+        log.info(">>>>> Удаление роли из сопоставления: {}", role.getName());
         super.deleteRoleMapping(role);
     }
 
+    /**
+     * Выполняет добавление в сопоставление ролей для текущего пользователя. Метод выполняет поиск во внешнем
+     * хранилище роли с подобным названием. Если аналогичная роль будет найдена во внешнем хранилище, она добавляется
+     * в отдельный список сопоставлений (таблица privfastsm.account_role)
+     * @param role
+     */
     @Override
-    public void grantRole(RoleModel role) {
-        System.out.println("\n>>>>>>>>>>>>>>> GRANT ROLE >>>>>>>>>>>>>" + role.getName() + "\n");
+    public void grantRole(@NonNull RoleModel role) {
+
+        CustomRoleStorage roleStorage = new CustomRoleStorage(session);
+        UserRoleEntity userRoleEntity = roleStorage.findRoleByName(role.getName());
+
+        if (userRoleEntity != null) {
+            entity.getRoleList().add(userRoleEntity);
+        }
+        log.info(">>>>> Добавление роли в сопоставление: {}", role.getName());
         super.grantRole(role);
     }
 
     @Override
     public boolean hasDirectRole(RoleModel role) {
-        System.out.println("\n>>>>>>>>>>>>>>> HAS DIRECT ROLE >>>>>>>>>>>>>" + role.getName() + "\n");
+        System.out.println("\n>>>>>>>>>>>>>>> HAS DIRECT ROLE >>>>>>>>>>>>> " + role.getName() + "\n");
         return super.hasDirectRole(role);
     }
 
     @Override
     public boolean hasRole(RoleModel role) {
-        System.out.println("\n>>>>>>>>>>>>>>> HAS ROLE >>>>>>>>>>>>>" + role.getName() + "\n");
+        System.out.println("\n>>>>>>>>>>>>>>> HAS ROLE >>>>>>>>>>>>> " + role.getName() + "\n");
         return super.hasRole(role);
     }
 
