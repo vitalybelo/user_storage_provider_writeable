@@ -409,17 +409,5 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         super.grantRole(role);
     }
 
-    @Override
-    public boolean hasDirectRole(RoleModel role) {
-        System.out.println("\n>>>>>>>>>>>>>>> HAS DIRECT ROLE >>>>>>>>>>>>> " + role.getName() + "\n");
-        return super.hasDirectRole(role);
-    }
-
-    @Override
-    public boolean hasRole(RoleModel role) {
-        System.out.println("\n>>>>>>>>>>>>>>> HAS ROLE >>>>>>>>>>>>> " + role.getName() + "\n");
-        return super.hasRole(role);
-    }
-
 
 }
