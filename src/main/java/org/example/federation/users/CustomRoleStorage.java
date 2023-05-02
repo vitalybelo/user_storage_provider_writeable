@@ -4,7 +4,6 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.example.federation.users.model.UserEntity;
 import org.example.federation.users.model.UserRoleEntity;
-import org.graalvm.nativeimage.IsolateThread;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
 import org.keycloak.models.*;
 
