@@ -6,7 +6,6 @@ import org.example.federation.users.model.UserEntity;
 import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
 import org.keycloak.models.*;
-import org.keycloak.storage.role.RoleStorageProvider;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
@@ -14,10 +13,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Set;
-import java.util.stream.Stream;
 
 @Slf4j
-public class CustomRoleStorage implements RoleProvider {
+public class CustomRoleStorage {
 
     protected EntityManager em;
     protected RealmModel realm;
@@ -178,74 +176,6 @@ public class CustomRoleStorage implements RoleProvider {
     }
 
 
-    @Override
-    public RoleModel addRealmRole(RealmModel realm, String id, String name) {
-        System.out.println("\n\n>>>>>>>>>>>>>>>>>>>>> ADD REALM ROLE >>>>>>>>>>>>>>>>>>>\n");
-        return null;
-    }
 
-    @Override
-    public Stream<RoleModel> getRealmRolesStream(RealmModel realm, Integer first, Integer max) {
-        return null;
-    }
 
-    @Override
-    public Stream<RoleModel> getRolesStream(RealmModel realm, Stream<String> ids, String search, Integer first, Integer max) {
-        return null;
-    }
-
-    @Override
-    public boolean removeRole(RoleModel role) {
-        return false;
-    }
-
-    @Override
-    public void removeRoles(RealmModel realm) {
-
-    }
-
-    @Override
-    public RoleModel addClientRole(ClientModel client, String id, String name) {
-        return null;
-    }
-
-    @Override
-    public Stream<RoleModel> getClientRolesStream(ClientModel client, Integer first, Integer max) {
-        return null;
-    }
-
-    @Override
-    public void removeRoles(ClientModel client) {
-
-    }
-
-    @Override
-    public void close() {
-
-    }
-
-    @Override
-    public RoleModel getRealmRole(RealmModel realm, String name) {
-        return null;
-    }
-
-    @Override
-    public RoleModel getRoleById(RealmModel realm, String id) {
-        return null;
-    }
-
-    @Override
-    public Stream<RoleModel> searchForRolesStream(RealmModel realm, String search, Integer first, Integer max) {
-        return null;
-    }
-
-    @Override
-    public RoleModel getClientRole(ClientModel client, String name) {
-        return null;
-    }
-
-    @Override
-    public Stream<RoleModel> searchForClientRolesStream(ClientModel client, String search, Integer first, Integer max) {
-        return null;
-    }
 }
