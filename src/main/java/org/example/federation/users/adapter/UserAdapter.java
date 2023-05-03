@@ -18,7 +18,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
-public class UserAdapter extends AbstractUserAdapterFederatedStorage {
+public class UserAdapter extends AbstractUserAdapterFederatedStorage
+{
 
     private static final String ENABLED_TRUE = "ACTIVE";
     private static final String ENABLED_FALSE = "DELETED";
@@ -33,7 +34,6 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     protected UserEntity entity;
     protected String keycloakId;
     protected KeycloakSession session;
-    private static Long counter = 0L;
 
     public UserAdapter(KeycloakSession session, RealmModel realm, ComponentModel model, UserEntity entity) {
 
@@ -41,27 +41,6 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         this.session = session;
         this.entity = entity;
         keycloakId = StorageId.keycloakId(model, String.valueOf(entity.getAccountId()));
-
-        // Сопоставление ролей для пользователя
-        log.info(">>>>> Cопоставление ролей для: {} (счетчик = {})", entity.getUsername(), ++counter);
-        for (UserRoleEntity role : entity.getRoleList())
-        {
-            String roleName = role.getName();
-            RoleModel realmRole = realm.getRole(role.getName());
-            if (realmRole == null) {
-                realmRole = realm.addRole(roleName);
-                realmRole.setDescription(role.getDescription());
-            }
-            Optional<RoleModel> optional =
-                    getRealmRoleMappingsStream().filter(r-> r.getName().equals(roleName)).findFirst();
-            // TODO - попробовать переделать на hasRole()
-            // !hasRole(realmRole)
-            if (optional.isEmpty()) {
-                log.info(">>>>> Добавляем роль {} :: для пользователя: {} ", roleName, entity.getUsername());
-                grantRole(realmRole);
-            }
-        }
-
     }
 
     @Override
@@ -261,7 +240,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
      * Здесь необходимо указать 1 обязательный атрибут - username, 3 необязательных стандартных атрибутов keycloak
      * и обязательно весь список кастомных атрибутов пользователя, если хотите чтобы они были добавлены в карточку
      * пользователя в административной консоли keycloak
-     * @return - MultivaluedHashMap карту со списком всех атрибутов и их значений
+     * @return MultivaluedHashMap карту со списком всех атрибутов и их значений
      */
     @Override
     public Map<String, List<String>> getAttributes() {
@@ -297,10 +276,9 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     /**
-     * Создает сопоставление ролей для текущего пользователя, фактически добавляет набор ролей для пользователя.
-     * Роли при этом считываются из внешнего хранилища, где уже существует сопоставление ролей каждому пользователю.
-     * Роли загружаются в список ролей класса UserEntity из таблицы ролей userroles по сопоставлению @ManyToMany.
-     * Keycloak обязательно вызовет отдельную транзакцию для считывания ролей, поэтому можно использовать LAZY
+     * Создает внутреннее сопоставление ролей для текущего пользователя.
+     * Метод используется в том случае, если нужно быстро добавить сопоставление ролей для федеративных пользователей,
+     * которыми потом вы не планирует управлять всеми средствами административной консоли keycloak (режим read-only).
      * @return Set набор ролей в виде экземпляров класса UserRoleModel (имплементация от UserModel)
      */
     @Override
@@ -309,32 +287,50 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     }
 
     /**
-     * Возвращает список ролей пользователя.
-     * @return Set набор экземпляров класса RoleModel
-     */
-    public Set<RoleModel> getRolesAsSet() {
-        Set<UserRoleEntity> rolesList = entity.getRoleList();
-        if (rolesList != null && !rolesList.isEmpty()) {
-            return rolesList.stream()
-                    .map(role -> new UserRoleModel(role, realm)).collect(Collectors.toSet());
-        }
-        return Set.of();
-    }
-
-    /**
      * Несмотря на то, что он Deprecated, этот метод по сути является главным для получения ролей пользователя.
-     * Сначала метод получает сопоставления ролей из федеративного хранилища (LDAP если подключены).
-     * Затем добавляет роли по умолчанию (отключается переопределением метода appendDefaultRolesToRoleMappings().
+     * Сначала метод получает список сопоставления ролей из федеративного хранилища getFederatedRoleMappings().
+     * В этом списке содержатся роли из области, которые уже назначены текущему пользователю. Далее, вызывается
+     * кастомный (пользовательский) метод, который проверяет список ролей сопоставленных пользователю во внешнем
+     * хранилище со списком ролей, которые назначены этому же пользователю в keycloak. Метод обнаруживает роли,
+     * которые необходимо добавить в список сопоставлений keycloak, и добавляет их.
+     * Затем добавляются роли по умолчанию (отключается переопределением метода appendDefaultRolesToRoleMappings().
      * И в конце вызывает метод getRoleMappingsInternal() для добавления ролей от провайдера. Мы должны обязательно
-     * переопределить метод getRoleMappingsInternal(), чтобы добавить в сопоставление - роли от нашего провайдера
+     * переопределить метод getRoleMappingsInternal(), чтобы добавить в сопоставление роли от вашего провайдера,
+     * но только в том случае, если мы не планируем самостоятельно управлять федеративными ролями в keycloak.
      * @return список всех назначенных ролей для пользователя в keycloak.
      */
     @Override
     public Set<RoleModel> getRoleMappings() {
+
         Set<RoleModel> set = new HashSet<>(getFederatedRoleMappings());
+        // здесь начинается кастомный метод сопоставления списка ролей хранилища и списка ролей keycloak
+        // ---------------------------------------------------------------------------------------------
+        log.info(">>>> GET_ROLE_MAPPING :: проверка сопоставление ролей для: {}", entity.getUsername());
+        for (UserRoleEntity role : entity.getRoleList())
+        {
+            String roleName = role.getName();
+            RoleModel realmRole = realm.getRole(role.getName());
+            if (realmRole == null) {
+                realmRole = realm.addRole(roleName);
+                realmRole.setDescription(role.getDescription());
+            }
+            Optional<RoleModel> optional =
+                    set.stream().filter(r-> r.getName().equals(roleName)).findFirst();
+
+            if (optional.isEmpty()) {
+                log.info(">>>>> Добавлена роль {} (пользователя: {}) ", roleName, entity.getUsername());
+                grantRole(realmRole);
+                set.add(realmRole);
+            }
+        }
+        // ------------------------------------------------------------------------------------------------
+        // здесь заканчивается кастомный метод сопоставления списка ролей хранилища и списка ролей keycloak
+
+        // добавление стандартных и композитных ролей из области если они там есть
         if (appendDefaultRolesToRoleMappings()) {
             set.addAll(realm.getDefaultRole().getCompositesStream().collect(Collectors.toSet()));
         }
+        // добавление внутренних ролей (простое добавление ролей федеративных пользователей)
         set.addAll(getRoleMappingsInternal());
         return set;
     }
@@ -381,20 +377,19 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
     public void deleteRoleMapping(RoleModel role) {
 
         Optional<UserRoleEntity> optional = entity.getRoleList().stream()
-                .filter(r-> Objects.equals(r.getName(), role.getName())).findFirst();
+                .filter(r-> r.getName().equals(role.getName())).findFirst();
 
-        optional.ifPresent(userRole -> {
-            entity.getRoleList().remove(userRole);
-        });
-        log.info(">>>>> Удаление роли из сопоставления: {}", role.getName());
+        optional.ifPresent(userRole -> entity.removeUserRole(userRole));
+        log.info(">>>>> DeleteRoleMapping :: {}", role.getName());
         super.deleteRoleMapping(role);
     }
 
     /**
      * Выполняет добавление в сопоставление ролей для текущего пользователя. Метод выполняет поиск во внешнем
      * хранилище роли с подобным названием. Если аналогичная роль будет найдена во внешнем хранилище, она добавляется
-     * в отдельный список сопоставлений (таблица privfastsm.account_role)
-     * @param role
+     * в отдельный список сопоставлений (таблица privfastsm.account_role). Если подобной роли не существует во внешнем
+     * хранилище, создаем эту роль в там. После всего этого назначаем роль пользователю.
+     * @param role модель роли которую нужно назначить текущему пользователю
      */
     @Override
     public void grantRole(@NonNull RoleModel role) {
@@ -403,11 +398,16 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
         UserRoleEntity userRoleEntity = roleStorage.findRoleByName(role.getName());
 
         if (userRoleEntity != null) {
-            entity.getRoleList().add(userRoleEntity);
+            entity.addUserRole(userRoleEntity);
         }
-        log.info(">>>>> Добавление роли в сопоставление: {}", role.getName());
+        log.info(">>>>> GrantRole() :: {}", role.getName());
         super.grantRole(role);
     }
+
+
+
+
+
 
 
 }

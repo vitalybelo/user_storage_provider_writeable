@@ -6,6 +6,7 @@ import org.example.federation.users.model.UserEntity;
 import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
 import org.keycloak.models.*;
+import org.keycloak.storage.role.RoleStorageProvider;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
@@ -13,9 +14,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @Slf4j
-public class CustomRoleStorage {
+public class CustomRoleStorage implements RoleProvider {
 
     protected EntityManager em;
     protected RealmModel realm;
@@ -137,25 +139,113 @@ public class CustomRoleStorage {
     public void AddRealmRoles(Set<UserRoleEntity> entitySet) {
 
         for (UserRoleEntity role : entitySet) {
+
             // пробуем получить роль из области
             String roleName = role.getName();
             RoleModel realmRole = realm.getRole(roleName);
-            // если роль из области = null, создаем роль в области
+
+            // если роль нет в области (она = null) - создаем новую
             if (realmRole == null) {
+
+                // добавляем роль с описанием в рабочую область (realm)
                 realmRole = realm.addRole(roleName);
                 realmRole.setDescription(role.getDescription());
 
                 // TODO - заменить на алгоритм добавления аттрибутов ролей или убрать совсем
-                // теперь добавляем аттрибуты, если они заданы для роли
                 realmRole.setSingleAttribute("A1", "value 1");
                 realmRole.setSingleAttribute("A2", "value 2");
             }
         }
+    }
 
+    public UserRoleEntity saveRole(RoleModel role) {
+
+        // создаем новую пользовательскую роль
+        UserRoleEntity entity = new UserRoleEntity();
+        entity.setName(role.getName());
+        entity.setDescription(role.getDescription());
+
+        System.out.println("\n>>>>>>> SAVE ROLE >>>>>>>>>");
+        System.out.println(">>>>>>> name = " + entity.getName());
+        System.out.println(">>>>>>> desc = " + entity.getDescription() + "\n");
+
+        // добавляем роль во внешнее хранилище
+        em.getTransaction().begin();
+        em.persist(entity);
+        em.getTransaction().commit();
+
+        return entity;
     }
 
 
+    @Override
+    public RoleModel addRealmRole(RealmModel realm, String id, String name) {
+        System.out.println("\n\n>>>>>>>>>>>>>>>>>>>>> ADD REALM ROLE >>>>>>>>>>>>>>>>>>>\n");
+        return null;
+    }
 
+    @Override
+    public Stream<RoleModel> getRealmRolesStream(RealmModel realm, Integer first, Integer max) {
+        return null;
+    }
 
+    @Override
+    public Stream<RoleModel> getRolesStream(RealmModel realm, Stream<String> ids, String search, Integer first, Integer max) {
+        return null;
+    }
 
+    @Override
+    public boolean removeRole(RoleModel role) {
+        return false;
+    }
+
+    @Override
+    public void removeRoles(RealmModel realm) {
+
+    }
+
+    @Override
+    public RoleModel addClientRole(ClientModel client, String id, String name) {
+        return null;
+    }
+
+    @Override
+    public Stream<RoleModel> getClientRolesStream(ClientModel client, Integer first, Integer max) {
+        return null;
+    }
+
+    @Override
+    public void removeRoles(ClientModel client) {
+
+    }
+
+    @Override
+    public void close() {
+
+    }
+
+    @Override
+    public RoleModel getRealmRole(RealmModel realm, String name) {
+        return null;
+    }
+
+    @Override
+    public RoleModel getRoleById(RealmModel realm, String id) {
+        return null;
+    }
+
+    @Override
+    public Stream<RoleModel> searchForRolesStream(RealmModel realm, String search, Integer first, Integer max) {
+        return null;
+    }
+
+    @Override
+    public RoleModel getClientRole(ClientModel client, String name) {
+        return null;
+    }
+
+    @Override
+    public Stream<RoleModel> searchForClientRolesStream(ClientModel client, String search, Integer first, Integer max) {
+        return null;
+    }
 }

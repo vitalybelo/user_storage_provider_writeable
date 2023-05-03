@@ -39,22 +39,19 @@ public class CustomUserStorageProvider implements
     protected EntityManager em;
     protected ComponentModel model;
     protected KeycloakSession session;
-    protected CustomRoleStorage roles;
+    protected CustomRoleStorage roleStorage;
     private final KeycloakBCryptPasswordEncoder encoder = new KeycloakBCryptPasswordEncoder();
 
     CustomUserStorageProvider(KeycloakSession session, ComponentModel model) {
         this.session = session;
         this.model = model;
         this.em = session.getProvider(JpaConnectionProvider.class, "user-store").getEntityManager();
-        this.roles = new CustomRoleStorage(session);
-
-        // метод обновляет список ролей из jdbc хранилища и добавляет в realm каких там нет
-        log.info(">>>>> Read all roles from external database >>>>>");
-        roles.AddRealmRolesAll();
+        this.roleStorage = new CustomRoleStorage(session);
     }
 
     @Override
     public void preRemove(RealmModel realm, RoleModel role) {
+        log.info(">>>> PRE DELETE ROLE METHOD >>>>> {}", role.getName());
         UserStorageProvider.super.preRemove(realm, role);
     }
 
@@ -63,7 +60,7 @@ public class CustomUserStorageProvider implements
 
     /**
      * --------------------------------------------------------------------------------------------------------------
-     * TODO :: Реализация интерфейса UserLookupProvider
+     * UserLookupProvider
      * Это необязательный интерфейс возможностей, который предназначен для реализации любым UserStorageProvider,
      * поддерживающим базовые пользовательские запросы. Вы должны реализовать этот интерфейс, если хотите иметь
      * возможность входить в keycloak, используя пользователей из вашего хранилища.
@@ -138,7 +135,7 @@ public class CustomUserStorageProvider implements
 
     /**
      * --------------------------------------------------------------------------------------------------------------
-     * TODO :: Реализация интерфейса UserRegistrationProvider
+     * UserRegistrationProvider
      * Это необязательный интерфейс возможностей, который предназначен для реализации любым UserStorageProvider,
      * поддерживающим добавление новых пользователей. Вы должны реализовать этот интерфейс, если хотите использовать
      * это хранилище для регистрации новых пользователей.
@@ -210,7 +207,8 @@ public class CustomUserStorageProvider implements
 
     /**
      * --------------------------------------------------------------------------------------------------------------
-     * TODO :: Реализация интерфейса CredentialInputValidator и CredentialInputUpdater
+     * CredentialInputValidator
+     * CredentialInputUpdater
      * Внедрения этого интерфейса могут проверять CredentialInput, т. е. проверять пароль.
      * UserStorageProviders и CredentialProviders могут реализовать этот интерфейс.
      * Внедрения CredentialInputUpdater позволяет реализовать редактирование пароля
@@ -321,7 +319,7 @@ public class CustomUserStorageProvider implements
 
     /**
      * --------------------------------------------------------------------------------------------------------------
-     * TODO :: Реализация интерфейса UserQueryProvider
+     * UserQueryProvider
      * Это необязательный интерфейс возможностей, который предназначен для реализации любым UserStorageProvider,
      * поддерживающим сложные пользовательские запросы. Вы должны реализовать этот интерфейс, если хотите просматривать
      * и управлять пользователями из административной консоли.
@@ -379,6 +377,9 @@ public class CustomUserStorageProvider implements
     public List<UserEntity> findUsers(String search, int firstResult, int maxResults) {
 
         if (search.equalsIgnoreCase("*")) {
+            // TODO - посмотреть - может найдется лучшее место для чтения всех ролей из хранилища
+            log.info(">>>>> чтение всех ролей из хранилища и добавление в область тех, которых нет >>>>>");
+            roleStorage.AddRealmRolesAll();
             return findAllUsers(firstResult, maxResults);
         }
         TypedQuery<UserEntity> query = em.createNamedQuery("searchForUser", UserEntity.class);
