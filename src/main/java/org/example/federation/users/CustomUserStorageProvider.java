@@ -48,6 +48,15 @@ public class CustomUserStorageProvider implements
         this.em = session.getProvider(JpaConnectionProvider.class, "user-store").getEntityManager();
     }
 
+    /**
+     * Выполняет полное удаление роли из keycloak, синхронно роль удаляется из внешнего хранилища.
+     * Изначально этот метод пытается найти роль во внешнем хранилище. Если роль найдена, тогда последовательно
+     * удаляются все сопоставления роли сделанные для пользователей в хранилище. В результате в хранилище больше
+     * не остается сопоставлений для этой роли. Затем сама роль удаляется из хранилища. Последнее действие,
+     * удаление из keycloak.
+     * @param realm рабочая область
+     * @param role модель роли, которую необходимо полностью удалить из хранилища и keycloak
+     */
     @Override
     public void preRemove(RealmModel realm, RoleModel role) {
 
