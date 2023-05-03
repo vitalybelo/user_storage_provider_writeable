@@ -3,6 +3,7 @@ package org.example.federation.users.model;
 import lombok.*;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 import java.util.LinkedHashSet;
 import java.util.*;
 
@@ -30,12 +31,13 @@ public class UserRoleEntity {
     private String name;
     @Column(name = "description")
     private String description;
+    @Column(name = "modification_date")
+    private Timestamp modificationDate;
 
     @ManyToMany(
             mappedBy = "roleList",
             fetch = FetchType.LAZY,
             cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Set<UserEntity> userList = new LinkedHashSet<>();
-
 
 }

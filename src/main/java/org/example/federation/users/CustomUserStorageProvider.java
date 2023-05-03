@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.federation.users.adapter.UserAdapter;
 import org.example.federation.users.encoder.KeycloakBCryptPasswordEncoder;
 import org.example.federation.users.model.UserEntity;
+import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
 import org.keycloak.credential.CredentialInput;
@@ -39,24 +40,36 @@ public class CustomUserStorageProvider implements
     protected EntityManager em;
     protected ComponentModel model;
     protected KeycloakSession session;
-    protected CustomRoleStorage roleStorage;
     private final KeycloakBCryptPasswordEncoder encoder = new KeycloakBCryptPasswordEncoder();
 
     CustomUserStorageProvider(KeycloakSession session, ComponentModel model) {
         this.session = session;
         this.model = model;
         this.em = session.getProvider(JpaConnectionProvider.class, "user-store").getEntityManager();
-        this.roleStorage = new CustomRoleStorage(session);
     }
 
     @Override
     public void preRemove(RealmModel realm, RoleModel role) {
-        log.info(">>>> PRE DELETE ROLE METHOD >>>>> {}", role.getName());
+
+        UserRoleEntity roleEntity = new CustomRoleStorage(session).findRoleByName(role.getName());
+        if (roleEntity != null)
+        {
+            em.getTransaction().begin();
+            if (!roleEntity.getUserList().isEmpty()) {
+                roleEntity.getUserList().forEach(user -> user.getRoleList().remove(roleEntity));
+            }
+            em.remove(roleEntity);
+            em.getTransaction().commit();
+            log.info(">>>> удаление роли: \"{}\" из хранилища выполнено успешно", role.getName());
+        } else {
+            log.info(">>>> роли \"{}\" нет в хранилище. удаление записи невозможно", role.getName());
+        }
         UserStorageProvider.super.preRemove(realm, role);
     }
 
     @Override
-    public void close() { }
+    public void close() {
+    }
 
     /**
      * --------------------------------------------------------------------------------------------------------------
@@ -77,8 +90,8 @@ public class CustomUserStorageProvider implements
      * @return найденная модель пользователя или null, если такой пользователь не существует
      */
     @Override
-    public UserModel getUserById(RealmModel realm, String id)
-    {
+    public UserModel getUserById(RealmModel realm, String id) {
+
         String persistenceId = StorageId.externalId(id);
         UserEntity user = em.find(UserEntity.class, Long.parseLong(persistenceId));
 
@@ -99,8 +112,8 @@ public class CustomUserStorageProvider implements
      * пользователей с именем пользователя, которое отличается только регистром.
      */
     @Override
-    public UserModel getUserByUsername(RealmModel realm, String username)
-    {
+    public UserModel getUserByUsername(RealmModel realm, String username) {
+
         TypedQuery<UserEntity> query = em.createNamedQuery("getUserByUsername", UserEntity.class);
         query.setParameter("username", username);
         List<UserEntity> userList = query.getResultList();
@@ -120,8 +133,8 @@ public class CustomUserStorageProvider implements
      * @throws ModelDuplicateException когда есть больше пользователей с одним и тем же адресом электронной почты
      */
     @Override
-    public UserModel getUserByEmail(RealmModel realm, String email)
-    {
+    public UserModel getUserByEmail(RealmModel realm, String email) {
+
         TypedQuery<UserEntity> query = em.createNamedQuery("getUserByEmail", UserEntity.class);
         query.setParameter("email", email);
         List<UserEntity> userList = query.getResultList();
@@ -153,21 +166,21 @@ public class CustomUserStorageProvider implements
      * @return модель созданного пользователя
      */
     @Override
-    public UserModel addUser(RealmModel realm, String username)
-    {
-        UserEntity entity = new UserEntity();
-        entity.setStatus("ACTIVE");
-        entity.setUsername(username);
-        entity.setPassword(encoder.encode(username));
-        entity.setCreated(System.currentTimeMillis());
-        entity.setMaxIdleTime(10);
-        entity.setMaxSessions(0);
-        entity.setBlockingDate(null);
-        entity.setBannerViewed(false);
+    public UserModel addUser(RealmModel realm, String username) {
+
+        UserEntity userEntity = new UserEntity();
+        userEntity.setStatus("ACTIVE");
+        userEntity.setUsername(username);
+        userEntity.setPassword(encoder.encode(username));
+        userEntity.setCreated(System.currentTimeMillis());
+        userEntity.setMaxIdleTime(10);
+        userEntity.setMaxSessions(0);
+        userEntity.setBlockingDate(null);
+        userEntity.setBannerViewed(false);
         em.getTransaction().begin();
-        em.persist(entity);
+        em.persist(userEntity);
         em.getTransaction().commit();
-        return new UserAdapter(session, realm, model, entity);
+        return new UserAdapter(session, realm, model, userEntity);
     }
 
     /**
@@ -181,18 +194,18 @@ public class CustomUserStorageProvider implements
      * @return true, если пользователь был удален, иначе false
      */
     @Override
-    public boolean removeUser(RealmModel realm, UserModel userModel)
-    {
+    public boolean removeUser(RealmModel realm, UserModel userModel) {
+
         String persistenceId = StorageId.externalId(userModel.getId());
-        UserEntity user = em.find(UserEntity.class, Long.parseLong(persistenceId));
-        if (user == null) {
+        UserEntity userEntity = em.find(UserEntity.class, Long.parseLong(persistenceId));
+        if (userEntity == null) {
             return false;
         }
         em.getTransaction().begin();
-        if (!user.getRoleList().isEmpty()) {
-            user.getRoleList().forEach(role -> role.getUserList().remove(user));
+        if (!userEntity.getRoleList().isEmpty()) {
+            userEntity.getRoleList().forEach(role -> role.getUserList().remove(userEntity));
         }
-        em.remove(user);
+        em.remove(userEntity);
         em.getTransaction().commit();
         return true;
     }
@@ -379,7 +392,7 @@ public class CustomUserStorageProvider implements
         if (search.equalsIgnoreCase("*")) {
             // TODO - посмотреть - может найдется лучшее место для чтения всех ролей из хранилища
             log.info(">>>>> чтение всех ролей из хранилища и добавление в область тех, которых нет >>>>>");
-            roleStorage.AddRealmRolesAll();
+            new CustomRoleStorage(session).AddRealmRolesAll();
             return findAllUsers(firstResult, maxResults);
         }
         TypedQuery<UserEntity> query = em.createNamedQuery("searchForUser", UserEntity.class);

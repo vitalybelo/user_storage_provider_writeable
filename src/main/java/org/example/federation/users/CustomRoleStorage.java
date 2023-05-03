@@ -9,6 +9,7 @@ import org.keycloak.models.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -88,7 +89,7 @@ public class CustomRoleStorage {
         List<UserRoleEntity> roleList = query.getResultList();
 
         if (roleList.isEmpty()) {
-            log.info(">>>>> невозможно найти роль по названию = \"{}\"", name);
+            log.info(">>>>> findRoleByName() :: роль \"{}\" не найдена", name);
             return null;
         }
         return roleList.get(0);
@@ -164,6 +165,7 @@ public class CustomRoleStorage {
         UserRoleEntity entity = new UserRoleEntity();
         entity.setName(role.getName());
         entity.setDescription(role.getDescription());
+        entity.setModificationDate(new Timestamp(System.currentTimeMillis()));
 
         // добавляем роль во внешнее хранилище
         em.getTransaction().begin();
