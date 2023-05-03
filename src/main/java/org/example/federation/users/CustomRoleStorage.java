@@ -85,11 +85,13 @@ public class CustomRoleStorage {
 
         TypedQuery<UserRoleEntity> query = em.createNamedQuery("getRoleByName",UserRoleEntity.class);
         query.setParameter("name", name);
-        UserRoleEntity userRole = query.getSingleResult();
-        if (userRole == null) {
-            log.info(">>>>> Невозможно найти роль по названию = {} >>>>>", name);
+        List<UserRoleEntity> roleList = query.getResultList();
+
+        if (roleList.isEmpty()) {
+            log.info(">>>>> невозможно найти роль по названию = \"{}\"", name);
+            return null;
         }
-        return userRole;
+        return roleList.get(0);
     }
 
     /**
@@ -163,15 +165,12 @@ public class CustomRoleStorage {
         entity.setName(role.getName());
         entity.setDescription(role.getDescription());
 
-        System.out.println("\n>>>>>>> SAVE ROLE >>>>>>>>>");
-        System.out.println(">>>>>>> name = " + entity.getName());
-        System.out.println(">>>>>>> desc = " + entity.getDescription() + "\n");
-
         // добавляем роль во внешнее хранилище
         em.getTransaction().begin();
         em.persist(entity);
         em.getTransaction().commit();
 
+        log.info(">>>> в хранилище добавлена роль: \"{}\"", role.getName());
         return entity;
     }
 

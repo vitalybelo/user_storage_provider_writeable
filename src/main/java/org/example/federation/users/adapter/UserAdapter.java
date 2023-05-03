@@ -1,6 +1,5 @@
 package org.example.federation.users.adapter;
 
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.example.federation.users.CustomRoleStorage;
 import org.example.federation.users.model.UserEntity;
@@ -283,6 +282,10 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
      */
     @Override
     protected Set<RoleModel> getRoleMappingsInternal() {
+//        if (entity.getRoleList() != null) {
+//            return entity.getRoleList().stream()
+//                    .map(roleName -> new UserRoleModel(roleName, realm)).collect(Collectors.toSet());
+//        }
         return Set.of();
     }
 
@@ -367,10 +370,11 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
     }
 
     /**
-     * Удаляет сопоставления роли для текущего пользователя. Метод сначала ищет совпадение в списке уже
-     * назначенных ролей этого пользователя. Если совпадение найдено, роль удаляется из списка, далее из
-     * сопоставлений внутри keycloak. Синхронно удаляется сопоставление из внешнего хранилища.
-     * (таблица privfastsm.account_role)
+     * Удаляет сопоставления роли для текущего пользователя.
+     * Первоначально выполняется проверка, состоит ли роль в списке уже назначенных ролей для этого пользователя.
+     * Если совпадение найдено, роль удаляется из списка, и связанного с ним списка пользователей в сущности ролей.
+     * Синхронно удаляется сопоставление из внешнего хранилища (таблица privfastsm.account_role).
+     * После этого удаляется сопоставления внутри keycloak.
      * @param role модель роли для удаления
      */
     @Override
@@ -380,7 +384,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
                 .filter(r-> r.getName().equals(role.getName())).findFirst();
 
         optional.ifPresent(userRole -> entity.removeUserRole(userRole));
-        log.info(">>>>> DeleteRoleMapping :: {}", role.getName());
+        log.info(">>>> сопоставление роли \"{}\" удалено (пользователь: {})", role.getName(), entity.getUsername());
         super.deleteRoleMapping(role);
     }
 
@@ -392,15 +396,18 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
      * @param role модель роли которую нужно назначить текущему пользователю
      */
     @Override
-    public void grantRole(@NonNull RoleModel role) {
+    public void grantRole(RoleModel role) {
 
         CustomRoleStorage roleStorage = new CustomRoleStorage(session);
         UserRoleEntity userRoleEntity = roleStorage.findRoleByName(role.getName());
 
         if (userRoleEntity != null) {
             entity.addUserRole(userRoleEntity);
+        } else {
+            UserRoleEntity newRole = roleStorage.saveRole(role);
+            entity.addUserRole(newRole);
         }
-        log.info(">>>>> GrantRole() :: {}", role.getName());
+        log.info(">>>> добавлено сопоставление роли \"{}\" (пользователь: {})", role.getName(), entity.getUsername());
         super.grantRole(role);
     }
 
