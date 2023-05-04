@@ -1,7 +1,9 @@
 package org.example.federation.users.adapter;
 
 import org.example.federation.users.model.UserRoleEntity;
+import org.keycloak.component.ComponentModel;
 import org.keycloak.models.*;
+import org.keycloak.storage.StorageId;
 
 import java.util.List;
 import java.util.Map;
@@ -11,10 +13,12 @@ public class UserRoleModel implements RoleModel {
 
     protected RealmModel realm;
     protected UserRoleEntity entity;
+    protected String keycloakId;
 
-    public UserRoleModel(UserRoleEntity entity, RealmModel realm) {
+    public UserRoleModel(UserRoleEntity entity, ComponentModel model, RealmModel realm) {
         this.entity = entity;
         this.realm = realm;
+        this.keycloakId = StorageId.keycloakId(model, String.valueOf(entity.getId()));
     }
 
     @Override
@@ -39,7 +43,8 @@ public class UserRoleModel implements RoleModel {
 
     @Override
     public String getId() {
-        return entity.getName();
+        return keycloakId;
+        //return entity.getName();
     }
 
     @Override

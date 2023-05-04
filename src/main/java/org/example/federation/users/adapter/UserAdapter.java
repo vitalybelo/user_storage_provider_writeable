@@ -401,18 +401,14 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
         CustomRoleStorage roleStorage = new CustomRoleStorage(session);
         UserRoleEntity userRoleEntity = roleStorage.findRoleByName(role.getName());
 
-        if (userRoleEntity != null) {
-            entity.addUserRole(userRoleEntity);
-        } else {
-            UserRoleEntity newRole = roleStorage.saveRole(role);
-            entity.addUserRole(newRole);
+        if (userRoleEntity == null) {
+            userRoleEntity = roleStorage.saveRole(role);
         }
-        log.info(">>>> добавлено сопоставление роли \"{}\" (пользователь: {})", role.getName(), entity.getUsername());
+        log.info(">>>> GRANT ROLE >>>> добавлено сопоставление роли \"{}\" (для пользователя: {})",
+                role.getName(), entity.getUsername());
+        entity.addUserRole(userRoleEntity);
         super.grantRole(role);
     }
-
-
-
 
 
 

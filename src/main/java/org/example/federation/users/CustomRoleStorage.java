@@ -161,18 +161,18 @@ public class CustomRoleStorage {
 
     public UserRoleEntity saveRole(RoleModel role) {
 
-        // создаем новую пользовательскую роль
+        // создаем новую пользовательскую модель роли
         UserRoleEntity entity = new UserRoleEntity();
         entity.setName(role.getName());
         entity.setDescription(role.getDescription());
         entity.setModificationDate(new Timestamp(System.currentTimeMillis()));
 
-        // добавляем роль во внешнее хранилище
+        // записываем новую модель роли во внешнее хранилище
         em.getTransaction().begin();
         em.persist(entity);
         em.getTransaction().commit();
 
-        log.info(">>>> в хранилище добавлена роль: \"{}\"", role.getName());
+        log.info(">>>> SAVE ROLE >>>> роль: \"{}\" добавлена в хранилище", role.getName());
         return entity;
     }
 
