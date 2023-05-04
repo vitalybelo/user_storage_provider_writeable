@@ -305,23 +305,30 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
     @Override
     public Set<RoleModel> getRoleMappings() {
 
+        // следующее действие - стандартная реализация метода getRoleMappings()
         Set<RoleModel> set = new HashSet<>(getFederatedRoleMappings());
+
         // здесь начинается кастомный метод сопоставления списка ролей хранилища и списка ролей keycloak
         // ---------------------------------------------------------------------------------------------
         log.info(">>>> GET_ROLE_MAPPING :: проверка сопоставление ролей для: {}", entity.getUsername());
         for (UserRoleEntity role : entity.getRoleList())
         {
-            String roleName = role.getName();
+            String entityRoleName = role.getName();
             RoleModel realmRole = realm.getRole(role.getName());
             if (realmRole == null) {
-                realmRole = realm.addRole(roleName);
+                realmRole = realm.addRole(entityRoleName);
                 realmRole.setDescription(role.getDescription());
+
+                // TODO - заменить на алгоритм добавления аттрибутов ролей или убрать совсем
+                realmRole.setSingleAttribute("A1", "value 1");
+                realmRole.setSingleAttribute("A2", "value 2");
+
             }
             Optional<RoleModel> optional =
-                    set.stream().filter(r-> r.getName().equals(roleName)).findFirst();
+                    set.stream().filter(r-> r.getName().equals(entityRoleName)).findFirst();
 
             if (optional.isEmpty()) {
-                log.info(">>>>> Добавлена роль {} (пользователя: {}) ", roleName, entity.getUsername());
+                log.info(">>>>> Добавлена роль {} (пользователя: {}) ", entityRoleName, entity.getUsername());
                 grantRole(realmRole);
                 set.add(realmRole);
             }
@@ -329,6 +336,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
         // ------------------------------------------------------------------------------------------------
         // здесь заканчивается кастомный метод сопоставления списка ролей хранилища и списка ролей keycloak
 
+        // следующие действия - стандартная реализация метода getRoleMappings()
         // добавление стандартных и композитных ролей из области если они там есть
         if (appendDefaultRolesToRoleMappings()) {
             set.addAll(realm.getDefaultRole().getCompositesStream().collect(Collectors.toSet()));
