@@ -321,7 +321,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
             Optional<RoleModel> optional = set.stream()
                     .filter(realm_role -> realm_role.getName().equals(userRole.getName())).findFirst();
 
-            // назначаем сопоставление роли для пользователя
+            // если сопоставления нет, добавляем роль для пользователя
             if (optional.isEmpty()) {
                 log.info(">>>>> Добавлена роль {} (пользователя: {}) ", userRole.getName(), entity.getUsername());
                 grantRole(realmRole);
