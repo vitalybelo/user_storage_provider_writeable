@@ -320,6 +320,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
                 realmRole.setDescription(role.getDescription());
 
                 // TODO - заменить на алгоритм добавления аттрибутов ролей или убрать совсем
+
                 realmRole.setSingleAttribute("A1", "value 1");
                 realmRole.setSingleAttribute("A2", "value 2");
 

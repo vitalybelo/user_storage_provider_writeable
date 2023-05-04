@@ -18,7 +18,7 @@ public class UserRoleModel implements RoleModel {
     public UserRoleModel(UserRoleEntity entity, ComponentModel model, RealmModel realm) {
         this.entity = entity;
         this.realm = realm;
-        this.keycloakId = StorageId.keycloakId(model, String.valueOf(entity.getId()));
+        this.keycloakId = StorageId.keycloakId(model, String.valueOf(entity.getRoleId()));
     }
 
     @Override

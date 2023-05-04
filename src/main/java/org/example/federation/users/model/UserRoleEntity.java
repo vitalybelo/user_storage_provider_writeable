@@ -25,7 +25,7 @@ public class UserRoleEntity {
     @Id
     @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long roleId;
 
     @Column(name = "name")
     private String name;
@@ -39,5 +39,14 @@ public class UserRoleEntity {
             fetch = FetchType.LAZY,
             cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Set<UserEntity> userList = new LinkedHashSet<>();
+
+    @OneToMany(
+            mappedBy = "roleEntity",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private Set<UserRightsEntity> rightList = new HashSet<>();
+
 
 }

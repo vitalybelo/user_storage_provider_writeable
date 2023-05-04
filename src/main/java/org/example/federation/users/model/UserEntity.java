@@ -68,6 +68,9 @@ public class UserEntity {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<UserRoleEntity> roleList = new LinkedHashSet<>();
 
+
+
+
     public void addUserRole(UserRoleEntity role) {
         if (role != null) {
             roleList.add(role);

@@ -6,6 +6,7 @@ import org.example.federation.users.model.UserEntity;
 import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
 import org.keycloak.models.*;
+import org.keycloak.storage.RoleStorageManager;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
@@ -16,13 +17,14 @@ import java.util.stream.Collectors;
 import java.util.Set;
 
 @Slf4j
-public class CustomRoleStorage {
+public class CustomRoleStorage extends RoleStorageManager {
 
     protected EntityManager em;
     protected RealmModel realm;
     protected KeycloakSession session;
 
     public CustomRoleStorage(KeycloakSession session) {
+        super(session, 5000);
         this.session = session;
         this.realm = session.getContext().getRealm();
         this.em = session.getProvider(JpaConnectionProvider.class, "user-store").getEntityManager();

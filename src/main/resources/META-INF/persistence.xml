@@ -8,6 +8,7 @@
 
     <persistence-unit name="user-store" transaction-type="JTA">
         <class>org.example.federation.users.model.AccountRoleEntity</class>
+        <class>org.example.federation.users.model.UserRightsEntity</class>
         <class>org.example.federation.users.model.UserRoleEntity</class>
         <class>org.example.federation.users.model.UserEntity</class>
 
