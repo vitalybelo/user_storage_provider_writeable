@@ -312,26 +312,18 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
         // здесь начинается кастомный метод сопоставления списка ролей хранилища и списка ролей keycloak
         // ---------------------------------------------------------------------------------------------
         log.info(">>>> GET_ROLE_MAPPING :: проверка сопоставление ролей для: {}", entity.getUsername());
-        for (UserRoleEntity role : entity.getRoleList())
+        for (UserRoleEntity userRole : entity.getRoleList())
         {
-            String entityRoleName = role.getName();
-            RoleModel realmRole = realm.getRole(role.getName());
-            if (realmRole == null) {
-                realmRole = realm.addRole(entityRoleName);
-                realmRole.setDescription(role.getDescription());
+            // проверяем наличие роли в рабочей области, добавляем если нет
+            RoleModel realmRole = new CustomRoleStorage(session).addRealmRole(userRole);
 
-                // загрузка прав из таблицы rights в атрибуты роли
-                if (!role.getRightsList().isEmpty()) {
-                    RoleModel finalRealmRole = realmRole;
-                    role.getRightsList()
-                            .forEach(r -> finalRealmRole.setSingleAttribute(r.getKeyName(), r.getValueName()));
-                }
-            }
-            Optional<RoleModel> optional =
-                    set.stream().filter(r-> r.getName().equals(entityRoleName)).findFirst();
+            // проверяем наличие сопоставления роли для пользователя
+            Optional<RoleModel> optional = set.stream()
+                    .filter(realm_role -> realm_role.getName().equals(userRole.getName())).findFirst();
 
+            // назначаем сопоставление роли для пользователя
             if (optional.isEmpty()) {
-                log.info(">>>>> Добавлена роль {} (пользователя: {}) ", entityRoleName, entity.getUsername());
+                log.info(">>>>> Добавлена роль {} (пользователя: {}) ", userRole.getName(), entity.getUsername());
                 grantRole(realmRole);
                 set.add(realmRole);
             }

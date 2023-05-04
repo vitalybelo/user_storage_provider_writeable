@@ -56,7 +56,6 @@ public class CustomRoleStorage {
 
     /**
      * Считывает из внешнего хранилища роли, имена которых или описания удовлетворяют маске поиска search
-     *
      * @param search      маска запроса (* - для загрузки всех пользователей)
      * @param firstResult Первый результат для возврата. Игнорируется, если отрицательный или нулевой
      * @param maxResults  Максимальное количество возвращаемых результатов. Игнорируется, если отрицательный или нулевой
@@ -111,7 +110,6 @@ public class CustomRoleStorage {
      * поиска пользователей во внешнем jdbc хранилище. Если задан параметр "*", осуществляется считывание ролей для
      * всех пользователей. В обратном случае, из внешнего хранилища выбираются пользователи, имена или почта которых
      * содержит маску поиска.
-     *
      * @param search строковая маска поиска пользователей, "*" для загрузки всех пользователей
      */
     public void AddRealmRolesForUsers(String search) {
@@ -135,32 +133,51 @@ public class CustomRoleStorage {
     }
 
     /**
+     * Метод проверяет наличие роли в рабочей области по названию. Если такой роли в рабочей области нет,
+     * создается роль, добавляется описание и заполняется список атрибутов, если они заданы для роли.
+     * @param userRole сущность роли из jdbc хранилища
+     * @return модель роли из рабочей области
+     */
+    public RoleModel addRealmRole(UserRoleEntity userRole) {
+
+        // пробуем получить роль из области
+        String userRoleName = userRole.getName();
+        RoleModel realmRole = realm.getRole(userRoleName);
+
+        // если роли нет в области = null, тогда создаем новую
+        if (realmRole == null) {
+
+            // добавляем роль с описанием в рабочую область (realm)
+            realmRole = realm.addRole(userRoleName);
+            realmRole.setDescription(userRole.getDescription());
+
+            // добавляем права (таблица rights) если они назначены для роли
+            if (!userRole.getRightsList().isEmpty()) {
+                RoleModel finalRealmRole = realmRole;
+                userRole.getRightsList()
+                        .forEach(r -> finalRealmRole.setSingleAttribute(r.getKeyName(), r.getValueName()));
+            }
+        }
+        return realmRole;
+    }
+
+
+    /**
      * Добавляет в рабочую область (realm) список ролей с описаниями и аттрибутами (если они заданы).
      * Метод предварительно проверяет наличие в realm каждой отдельной роли. Отсутствующие роли добавляются.
      * @param entitySet список ролей (экземпляров класса UserRoleEntity) для загрузки в рабочую область (realm)
      */
     public void AddRealmRoles(Set<UserRoleEntity> entitySet) {
-
-        for (UserRoleEntity role : entitySet) {
-
-            // пробуем получить роль из области
-            String roleName = role.getName();
-            RoleModel realmRole = realm.getRole(roleName);
-
-            // если роль нет в области (она = null) - создаем новую
-            if (realmRole == null) {
-
-                // добавляем роль с описанием в рабочую область (realm)
-                realmRole = realm.addRole(roleName);
-                realmRole.setDescription(role.getDescription());
-
-                // TODO - заменить на алгоритм добавления аттрибутов ролей или убрать совсем
-                realmRole.setSingleAttribute("A1", "value 1");
-                realmRole.setSingleAttribute("A2", "value 2");
-            }
+        for (UserRoleEntity userRole : entitySet) {
+            addRealmRole(userRole);
         }
     }
 
+    /**
+     * Сохраняет роль во внешнем хранилище
+     * @param role модель роли из рабочей области
+     * @return экземпляр класса UserRoleEntity, сущность роли в jdbc хранилище
+     */
     public UserRoleEntity saveRole(RoleModel role) {
 
         // создаем новую пользовательскую модель роли
