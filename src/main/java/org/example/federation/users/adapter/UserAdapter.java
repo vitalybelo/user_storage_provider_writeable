@@ -319,11 +319,12 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
                 realmRole = realm.addRole(entityRoleName);
                 realmRole.setDescription(role.getDescription());
 
-                // TODO - заменить на алгоритм добавления аттрибутов ролей или убрать совсем
-
-                realmRole.setSingleAttribute("A1", "value 1");
-                realmRole.setSingleAttribute("A2", "value 2");
-
+                // загрузка прав из таблицы rights в атрибуты роли
+                if (!role.getRightsList().isEmpty()) {
+                    RoleModel finalRealmRole = realmRole;
+                    role.getRightsList()
+                            .forEach(r -> finalRealmRole.setSingleAttribute(r.getKeyName(), r.getValueName()));
+                }
             }
             Optional<RoleModel> optional =
                     set.stream().filter(r-> r.getName().equals(entityRoleName)).findFirst();

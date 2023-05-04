@@ -28,7 +28,7 @@ public class UserRightsEntity {
     @Column(name = "version")
     private int version;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "userrole", nullable = false)
     private UserRoleEntity roleEntity;
 

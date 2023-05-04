@@ -69,19 +69,17 @@ public class UserEntity {
     private Set<UserRoleEntity> roleList = new LinkedHashSet<>();
 
 
-
-
     public void addUserRole(UserRoleEntity role) {
         if (role != null) {
             roleList.add(role);
-            role.getUserList().add(this);
+            role.getUsersList().add(this);
         }
     }
 
     public void removeUserRole(UserRoleEntity role) {
         if (role != null) {
             roleList.remove(role);
-            role.getUserList().remove(this);
+            role.getUsersList().remove(this);
         }
     }
 

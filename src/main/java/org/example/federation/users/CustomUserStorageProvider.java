@@ -63,9 +63,10 @@ public class CustomUserStorageProvider implements
         UserRoleEntity roleEntity = new CustomRoleStorage(session).findRoleByName(role.getName());
         if (roleEntity != null)
         {
+
             em.getTransaction().begin();
-            if (!roleEntity.getUserList().isEmpty()) {
-                roleEntity.getUserList().forEach(user -> user.getRoleList().remove(roleEntity));
+            if (!roleEntity.getUsersList().isEmpty()) {
+                roleEntity.getUsersList().forEach(user -> user.getRoleList().remove(roleEntity));
             }
             em.remove(roleEntity);
             em.getTransaction().commit();
@@ -212,7 +213,7 @@ public class CustomUserStorageProvider implements
         }
         em.getTransaction().begin();
         if (!userEntity.getRoleList().isEmpty()) {
-            userEntity.getRoleList().forEach(role -> role.getUserList().remove(userEntity));
+            userEntity.getRoleList().forEach(role -> role.getUsersList().remove(userEntity));
         }
         em.remove(userEntity);
         em.getTransaction().commit();

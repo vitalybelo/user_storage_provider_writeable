@@ -38,15 +38,26 @@ public class UserRoleEntity {
             mappedBy = "roleList",
             fetch = FetchType.LAZY,
             cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private Set<UserEntity> userList = new LinkedHashSet<>();
+    private Set<UserEntity> usersList = new LinkedHashSet<>();
 
     @OneToMany(
             mappedBy = "roleEntity",
             fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL,
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
             orphanRemoval = true
     )
-    private Set<UserRightsEntity> rightList = new HashSet<>();
+    private Set<UserRightsEntity> rightsList = new HashSet<>();
 
+    public void removeRights(UserRightsEntity rightsEntity) {
+        if (rightsEntity != null) {
+            rightsList.remove(rightsEntity);
+        }
+    }
+
+    public void addRights(UserRightsEntity rightsEntity) {
+        if (rightsEntity != null) {
+            rightsList.add(rightsEntity);
+        }
+    }
 
 }
