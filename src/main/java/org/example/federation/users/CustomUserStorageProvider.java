@@ -61,9 +61,7 @@ public class CustomUserStorageProvider implements
     public void preRemove(RealmModel realm, RoleModel role) {
 
         UserRoleEntity roleEntity = new CustomRoleStorage(session).findRoleByName(role.getName());
-        if (roleEntity != null)
-        {
-
+        if (roleEntity != null) {
             em.getTransaction().begin();
             if (!roleEntity.getUsersList().isEmpty()) {
                 roleEntity.getUsersList().forEach(user -> user.getRoleList().remove(roleEntity));

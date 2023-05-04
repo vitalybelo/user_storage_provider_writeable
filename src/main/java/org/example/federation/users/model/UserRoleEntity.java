@@ -48,16 +48,4 @@ public class UserRoleEntity {
     )
     private Set<UserRightsEntity> rightsList = new HashSet<>();
 
-    public void removeRights(UserRightsEntity rightsEntity) {
-        if (rightsEntity != null) {
-            rightsList.remove(rightsEntity);
-        }
-    }
-
-    public void addRights(UserRightsEntity rightsEntity) {
-        if (rightsEntity != null) {
-            rightsList.add(rightsEntity);
-        }
-    }
-
 }
