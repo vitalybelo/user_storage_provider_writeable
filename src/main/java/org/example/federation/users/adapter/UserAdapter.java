@@ -146,13 +146,11 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
     }
 
     /**
-     * Устанавливает кастомный аттрибут для пользователя.
-     * Метод вызывается после того, как в консоли администратора при редактировании аттрибутов пользователя была
-     * нажата кнопка "сохранить". Метод проверяет соответствует ли имя аттрибута реальному полю из кастомного хранилища.
-     * Если соответствует, выполняется изменения значения аттрибута в классе UserEntity и синхронно в jdbc хранилище.
+     * Метод модифицирует один из кастомных атрибутов данного пользователя, синхронно с jdbc хранилищем.
      * @param name название аттрибута
      * @param value значение аттрибута
-     * @return true если ни один из кастомных аттрибутов не был установлен и требуется установка методом из super
+     * @return true если запрашиваемый аттрибут не был кастомным и требуется вызов метода
+     *         super.setSingleAttribute(name, value);
      */
     public boolean isCustomAttributeMissedSetup(String name, String value) {
         switch (name) {
@@ -286,9 +284,14 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
     protected Set<RoleModel> getRoleMappingsInternal() {
 //        if (entity.getRoleList() != null) {
 //            return entity.getRoleList().stream()
-//                    .map(roleName -> new UserRoleModel(roleName, realm)).collect(Collectors.toSet());
+//                    .map(userRole -> new UserRoleModel(session, realm, model, userRole)).collect(Collectors.toSet());
 //        }
-        return Set.of();
+        return Collections.emptySet();
+    }
+
+    @Override
+    protected Set<RoleModel> getFederatedRoleMappings() {
+        return super.getFederatedRoleMappings();
     }
 
     /**
@@ -299,7 +302,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
      * назначенных пользователю во внешнем хранилище. Если в этом списке есть роли, которые еще не добавлены в
      * рабочую область, выполняется добавление ролей и добавление атрибутов для этих ролей из таблицы rights,
      * после чего синхронизируется сопоставления ролей для пользователя.
-     * Затем добавляются роли по умолчанию (отключается переопределением метода appendDefaultRolesToRoleMappings().
+     * Затем добавляются роли по умолчанию (отключается переопределением метода appendDefaultRolesToRoleMappings()).
      * И в конце вызывает метод getRoleMappingsInternal() для добавления ролей от провайдера. Мы должны обязательно
      * переопределить метод getRoleMappingsInternal(), чтобы добавить в сопоставление роли от вашего провайдера,
      * но только в том случае, если мы не планируем самостоятельно управлять федеративными ролями в keycloak.
@@ -334,11 +337,11 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
         // здесь заканчивается кастомный метод сопоставления списка ролей хранилища и списка ролей keycloak
 
         // следующие действия - стандартная реализация метода getRoleMappings()
-        // добавление стандартных и композитных ролей из области если они там есть
+        // добавление стандартных и композитных ролей назначенных пользователю из области, если они есть
         if (appendDefaultRolesToRoleMappings()) {
             set.addAll(realm.getDefaultRole().getCompositesStream().collect(Collectors.toSet()));
         }
-        // добавление внутренних ролей (простое добавление ролей федеративных пользователей)
+        // добавление пользователю внутренних ролей (простое добавление ролей федеративных пользователей)
         set.addAll(getRoleMappingsInternal());
         return set;
     }
@@ -409,8 +412,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
         if (userRoleEntity == null) {
             userRoleEntity = roleStorage.saveRole(role);
         }
-        log.info(">>>> GRANT ROLE >>>> добавлено сопоставление роли \"{}\" (для пользователя: {})",
-                role.getName(), entity.getUsername());
+        log.info(">>>> GRANT ROLE >>>> сопоставление роли \"{}\" (для пользователя: {})", role.getName(), entity.getUsername());
         entity.addUserRole(userRoleEntity);
         super.grantRole(role);
     }
