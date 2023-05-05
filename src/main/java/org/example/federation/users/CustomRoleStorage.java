@@ -4,6 +4,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.example.federation.users.model.UserEntity;
 import org.example.federation.users.model.UserRoleEntity;
+import org.keycloak.component.ComponentModel;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
 import org.keycloak.models.*;
 
@@ -14,15 +15,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @Slf4j
 public class CustomRoleStorage {
 
     protected EntityManager em;
     protected RealmModel realm;
+    protected ComponentModel model;
     protected KeycloakSession session;
 
-    public CustomRoleStorage(KeycloakSession session) {
+    public CustomRoleStorage(KeycloakSession session, ComponentModel model) {
+        this.model = model;
         this.session = session;
         this.realm = session.getContext().getRealm();
         this.em = session.getProvider(JpaConnectionProvider.class, "user-store").getEntityManager();
@@ -101,8 +105,8 @@ public class CustomRoleStorage {
      * Затем передаёт эту коллекцию в процедуру AddRolesToRealm(), которая последовательно проверяет наличие
      * каждой роли в рабочей области, и добавляет роль только если там ее нет.
      */
-    public void AddRealmRolesAll() {
-        AddRealmRoles(findAllRoles());
+    public void addRealmRolesAll() {
+        addRealmRoles(findAllRoles());
     }
 
     /**
@@ -112,7 +116,7 @@ public class CustomRoleStorage {
      * содержит маску поиска.
      * @param search строковая маска поиска пользователей, "*" для загрузки всех пользователей
      */
-    public void AddRealmRolesForUsers(String search) {
+    public void addRealmRolesForUsers(String search) {
 
         TypedQuery<UserEntity> query;
         if (search.equalsIgnoreCase("*")) {
@@ -128,7 +132,7 @@ public class CustomRoleStorage {
             for (UserEntity user : usersList) {
                 rolesList.addAll(user.getRoleList());
             }
-            AddRealmRoles(rolesList);
+            addRealmRoles(rolesList);
         }
     }
 
@@ -167,7 +171,7 @@ public class CustomRoleStorage {
      * Метод предварительно проверяет наличие в realm каждой отдельной роли. Отсутствующие роли добавляются.
      * @param entitySet список ролей (экземпляров класса UserRoleEntity) для загрузки в рабочую область (realm)
      */
-    public void AddRealmRoles(Set<UserRoleEntity> entitySet) {
+    public void addRealmRoles(Set<UserRoleEntity> entitySet) {
         for (UserRoleEntity userRole : entitySet) {
             addRealmRole(userRole);
         }
@@ -194,6 +198,7 @@ public class CustomRoleStorage {
         log.info(">>>> SAVE ROLE >>>> роль: \"{}\" добавлена в хранилище", role.getName());
         return entity;
     }
+
 
 
 }

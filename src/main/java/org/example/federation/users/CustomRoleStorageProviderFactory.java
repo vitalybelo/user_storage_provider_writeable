@@ -8,7 +8,7 @@ import org.keycloak.storage.role.RoleStorageProviderFactory;
 
 public class CustomRoleStorageProviderFactory implements RoleStorageProviderFactory<CustomRoleStorageProvider> {
 
-    public static final String PROVIDER_ID = "JDBC ROLES";
+    public static final String PROVIDER_ID = "JDBC ROLE STORAGE PROVIDER";
 
 
     @Override

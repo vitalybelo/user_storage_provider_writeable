@@ -60,7 +60,7 @@ public class CustomUserStorageProvider implements
     @Override
     public void preRemove(RealmModel realm, RoleModel role) {
 
-        UserRoleEntity roleEntity = new CustomRoleStorage(session).findRoleByName(role.getName());
+        UserRoleEntity roleEntity = new CustomRoleStorage(session, model).findRoleByName(role.getName());
         if (roleEntity != null) {
             em.getTransaction().begin();
             if (!roleEntity.getUsersList().isEmpty()) {
@@ -400,7 +400,7 @@ public class CustomUserStorageProvider implements
         if (search.equalsIgnoreCase("*")) {
             // TODO - посмотреть - может найдется лучшее место для чтения всех ролей из хранилища
             log.info(">>>>> чтение всех ролей из хранилища и добавление в область тех, которых нет >>>>>");
-            new CustomRoleStorage(session).AddRealmRolesAll();
+            new CustomRoleStorage(session, model).addRealmRolesAll();
             return findAllUsers(firstResult, maxResults);
         }
         TypedQuery<UserEntity> query = em.createNamedQuery("searchForUser", UserEntity.class);

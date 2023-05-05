@@ -32,6 +32,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
 
     protected UserEntity entity;
     protected String keycloakId;
+    protected ComponentModel model;
     protected KeycloakSession session;
 
     public UserAdapter(KeycloakSession session, RealmModel realm, ComponentModel model, UserEntity entity) {
@@ -39,6 +40,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
         super(session, realm, model);
         this.session = session;
         this.entity = entity;
+        this.model = model;
         keycloakId = StorageId.keycloakId(model, String.valueOf(entity.getAccountId()));
     }
 
@@ -315,7 +317,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
         for (UserRoleEntity userRole : entity.getRoleList())
         {
             // проверяем наличие роли в рабочей области, добавляем если нет
-            RoleModel realmRole = new CustomRoleStorage(session).addRealmRole(userRole);
+            RoleModel realmRole = new CustomRoleStorage(session, model).addRealmRole(userRole);
 
             // проверяем наличие сопоставления роли для пользователя
             Optional<RoleModel> optional = set.stream()
@@ -401,7 +403,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
     @Override
     public void grantRole(RoleModel role) {
 
-        CustomRoleStorage roleStorage = new CustomRoleStorage(session);
+        CustomRoleStorage roleStorage = new CustomRoleStorage(session, model);
         UserRoleEntity userRoleEntity = roleStorage.findRoleByName(role.getName());
 
         if (userRoleEntity == null) {
