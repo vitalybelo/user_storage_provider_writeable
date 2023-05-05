@@ -284,7 +284,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
     protected Set<RoleModel> getRoleMappingsInternal() {
 //        if (entity.getRoleList() != null) {
 //            return entity.getRoleList().stream()
-//                    .map(userRole -> new UserRoleModel(session, realm, model, userRole)).collect(Collectors.toSet());
+//                    .map(userRole -> new UserRoleAdapter(session, realm, model, userRole)).collect(Collectors.toSet());
 //        }
         return Collections.emptySet();
     }
