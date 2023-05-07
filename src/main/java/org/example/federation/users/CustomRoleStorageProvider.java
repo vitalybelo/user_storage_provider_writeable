@@ -1,5 +1,6 @@
 package org.example.federation.users;
 
+import lombok.extern.slf4j.Slf4j;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.models.*;
 import org.keycloak.storage.role.RoleLookupProvider;
@@ -7,11 +8,11 @@ import org.keycloak.storage.role.RoleStorageProvider;
 
 import java.util.stream.Stream;
 
+@Slf4j
 public class CustomRoleStorageProvider implements
         RoleStorageProvider,
         RoleLookupProvider
 {
-
     protected ComponentModel model;
     protected KeycloakSession session;
 

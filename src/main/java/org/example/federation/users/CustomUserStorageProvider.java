@@ -70,7 +70,7 @@ public class CustomUserStorageProvider implements
             em.getTransaction().commit();
             log.info(">>>> удаление роли: \"{}\" из хранилища выполнено успешно", role.getName());
         } else {
-            log.info(">>>> роли \"{}\" нет в хранилище. удаление записи невозможно", role.getName());
+            log.info(">>>> роли \"{}\" нет в хранилище. удаление записи не требуется", role.getName());
         }
         UserStorageProvider.super.preRemove(realm, role);
     }

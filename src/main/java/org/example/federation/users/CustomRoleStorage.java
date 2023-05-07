@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @Slf4j
 public class CustomRoleStorage {
@@ -145,13 +146,13 @@ public class CustomRoleStorage {
 
         // пробуем получить роль из области
         String userRoleName = userRole.getName();
-        RoleModel realmRole = realm.getRole(userRoleName);
+        RoleModel realmRole = session.roles().getRealmRole(realm, userRoleName); //realm.getRole(userRoleName);
 
         // если роли нет в области = null, тогда создаем новую
         if (realmRole == null) {
 
             // добавляем роль с описанием в рабочую область (realm)
-            realmRole = realm.addRole(userRoleName);
+            realmRole = session.roles().addRealmRole(realm, userRoleName); //realm.addRole(userRoleName);
             realmRole.setDescription(userRole.getDescription());
 
             // добавляем права (таблица rights) если они назначены для роли
@@ -197,7 +198,6 @@ public class CustomRoleStorage {
         log.info(">>>> SAVE ROLE >>>> роль: \"{}\" добавлена в хранилище", role.getName());
         return entity;
     }
-
 
 
 }

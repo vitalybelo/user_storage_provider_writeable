@@ -47,6 +47,7 @@ public class UserRoleAdapter implements RoleModel {
         return entity.getName();
     }
 
+
     @Override
     public boolean isComposite() {
         return false;
@@ -116,7 +117,6 @@ public class UserRoleAdapter implements RoleModel {
     public Map<String, List<String>> getAttributes() {
         return Map.of();
     }
-
 
 
 }
