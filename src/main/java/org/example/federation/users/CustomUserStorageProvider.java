@@ -21,6 +21,7 @@ import org.keycloak.storage.user.*;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -389,7 +390,11 @@ public class CustomUserStorageProvider implements
 
     /**
      * Выполняет поиск в федеративном jdbc хранилище пользователей соответствующий маске запроса
-     * @param search маска запроса (* - для загрузки всех пользователей)
+     * @param search маска запроса для поиска
+     *               <ul>
+     *               <li>"*" - для загрузки всех пользователей</li>
+     *               <li>"#roles" - загрузка всех ролей и добавление в realm</li>
+     *               </ul>
      * @param firstResult начальный сдвиг в списке
      * @param maxResults максимальное количество в списке
      * @return коллекцию класса UserEntity, содержащую данные пользователей из федеративного хранилища подходящих
@@ -398,10 +403,12 @@ public class CustomUserStorageProvider implements
     public List<UserEntity> findUsers(String search, int firstResult, int maxResults) {
 
         if (search.equalsIgnoreCase("*")) {
-            // TODO - посмотреть - может найдется лучшее место для чтения всех ролей из хранилища
-            log.info(">>>>> чтение всех ролей из хранилища и добавление в область тех, которых нет >>>>>");
-            new CustomRoleStorage(session, model).addRealmRolesAll();
+            // загрузка всех пользователей из внешнего хранилища
             return findAllUsers(firstResult, maxResults);
+        } else if (search.equalsIgnoreCase("#roles")) {
+            // загрузка всех ролей из хранилища и добавление их в рабочую область
+            new CustomRoleStorage(session, model).addRealmRolesAll();
+            return Collections.emptyList();
         }
         TypedQuery<UserEntity> query = em.createNamedQuery("searchForUser", UserEntity.class);
         query.setParameter("search", "%" + search.toLowerCase() + "%");
