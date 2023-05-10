@@ -1,6 +1,9 @@
 package org.example.federation.users;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.federation.users.adapter.UserRoleAdapter;
+import org.example.federation.users.model.UserRoleEntity;
+import org.keycloak.component.ComponentModel;
 import org.keycloak.models.*;
 
 import java.util.stream.Stream;
@@ -8,8 +11,8 @@ import java.util.stream.Stream;
 @Slf4j
 public class CustomRoleProvider implements RoleProvider {
 
+    protected ComponentModel model;
     protected KeycloakSession session;
-    protected RoleContainerModel model;
 
     public CustomRoleProvider(KeycloakSession session) {
         this.session = session;
@@ -18,7 +21,10 @@ public class CustomRoleProvider implements RoleProvider {
     @Override
     public RoleModel addRealmRole(RealmModel realm, String name) {
         log.info("\n\n************************** YOU LUCKY ***************************\n");
-        return RoleProvider.super.addRealmRole(realm, name);
+        UserRoleEntity role = new UserRoleEntity();
+        role.setName(name);
+        return new UserRoleAdapter(session, realm, model, role);
+        //return RoleProvider.super.addRealmRole(realm, name);
     }
 
     @Override

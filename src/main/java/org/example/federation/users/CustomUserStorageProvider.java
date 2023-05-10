@@ -42,6 +42,7 @@ public class CustomUserStorageProvider implements
     protected ComponentModel model;
     protected KeycloakSession session;
     private final KeycloakBCryptPasswordEncoder encoder = new KeycloakBCryptPasswordEncoder();
+    private static final boolean SIMULATION_DELETE_ACTION = true;
 
     CustomUserStorageProvider(KeycloakSession session, ComponentModel model) {
         this.session = session;
@@ -205,6 +206,12 @@ public class CustomUserStorageProvider implements
     @Override
     public boolean removeUser(RealmModel realm, UserModel userModel) {
 
+        // если true - не удаляем пользователя из физического хранилища, устанавливаем ему статус DELETE
+        if (SIMULATION_DELETE_ACTION) {
+            userModel.setEnabled(false);
+            return true;
+        }
+        // удаляет пользователя из хранилища и keycloak (из хранилища удалению могут помешать внешние ключи)
         String persistenceId = StorageId.externalId(userModel.getId());
         UserEntity userEntity = em.find(UserEntity.class, Long.parseLong(persistenceId));
         if (userEntity == null) {

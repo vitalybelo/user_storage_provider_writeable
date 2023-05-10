@@ -36,4 +36,9 @@ public class CustomRoleProviderFactory implements RoleProviderFactory<CustomRole
     public String getId() {
         return PROVIDER_ID;
     }
+
+    @Override
+    public int order() {
+        return RoleProviderFactory.super.order();
+    }
 }

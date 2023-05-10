@@ -171,6 +171,7 @@ public class CustomRoleStorage {
      * @param entitySet список ролей (экземпляров класса UserRoleEntity) для загрузки в рабочую область (realm)
      */
     public void addRealmRoles(Set<UserRoleEntity> entitySet) {
+//        entitySet.forEach(this::addRealmRole);
         for (UserRoleEntity userRole : entitySet) {
             addRealmRole(userRole);
         }
