@@ -81,7 +81,7 @@ public class CustomUserStorageProvider implements
     public void close() {
     }
 
-    /**
+    /*
      * --------------------------------------------------------------------------------------------------------------
      * UserLookupProvider
      * Это необязательный интерфейс возможностей, который предназначен для реализации любым UserStorageProvider,
@@ -156,7 +156,7 @@ public class CustomUserStorageProvider implements
         return new UserAdapter(session, realm, model, userList.get(0));
     }
 
-    /**
+    /*
      * --------------------------------------------------------------------------------------------------------------
      * UserRegistrationProvider
      * Это необязательный интерфейс возможностей, который предназначен для реализации любым UserStorageProvider,
@@ -234,7 +234,7 @@ public class CustomUserStorageProvider implements
         }
     }
 
-    /**
+    /*
      * --------------------------------------------------------------------------------------------------------------
      * CredentialInputValidator
      * CredentialInputUpdater
@@ -346,7 +346,7 @@ public class CustomUserStorageProvider implements
         return Stream.empty();
     }
 
-    /**
+    /*
      * --------------------------------------------------------------------------------------------------------------
      * UserQueryProvider
      * Это необязательный интерфейс возможностей, который предназначен для реализации любым UserStorageProvider,
@@ -400,7 +400,7 @@ public class CustomUserStorageProvider implements
      * @param search маска запроса для поиска
      *               <ul>
      *               <li>"*" - для загрузки всех пользователей</li>
-     *               <li>"#roles" - загрузка всех ролей и добавление в realm</li>
+     *               <li>"#roles" - загрузка и добавление всех ролей</li>
      *               </ul>
      * @param firstResult начальный сдвиг в списке
      * @param maxResults максимальное количество в списке

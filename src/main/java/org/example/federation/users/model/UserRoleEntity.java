@@ -46,6 +46,6 @@ public class UserRoleEntity {
             cascade = {CascadeType.PERSIST, CascadeType.MERGE},
             orphanRemoval = true
     )
-    private Set<UserRightsEntity> rightsList = new HashSet<>();
+    private Set<UserRightsEntity> rightsList = new LinkedHashSet<>();
 
 }
