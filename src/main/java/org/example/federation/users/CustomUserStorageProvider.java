@@ -399,8 +399,9 @@ public class CustomUserStorageProvider implements
      * Выполняет поиск в федеративном jdbc хранилище пользователей соответствующий маске запроса
      * @param search маска запроса для поиска
      *               <ul>
-     *               <li>"*" - для загрузки всех пользователей</li>
-     *               <li>"#roles" - загрузка и добавление всех ролей</li>
+     *               <li>"*" - загрузит всех пользователей</li>
+     *               <li>"#roles#{маска}" - загрузка и добавление ролей для пользователей, имена которых
+     *               соответствуют маске поиска {маска}</li>
      *               </ul>
      * @param firstResult начальный сдвиг в списке
      * @param maxResults максимальное количество в списке
@@ -409,13 +410,18 @@ public class CustomUserStorageProvider implements
      */
     public List<UserEntity> findUsers(String search, int firstResult, int maxResults) {
 
-        if (search.equalsIgnoreCase("*")) {
+        if (search.equalsIgnoreCase("*"))
+        {
             // загрузка всех пользователей из внешнего хранилища
             return findAllUsers(firstResult, maxResults);
-        } else if (search.equalsIgnoreCase("#roles")) {
-            // загрузка всех ролей из хранилища и добавление их в рабочую область
-            new RoleStorage(session, model).addRealmRolesAll();
-            return Collections.emptyList();
+        }
+        else if (search.startsWith("#roles#"))
+        {
+            // загрузка ролей для определенных пользователей в рабочую область
+            // формат строки такой: #roles#{маска}, где {маска} может быть любой не пустой
+            // - "*" - загрузит роли всех пользователей
+            // - "admin" - загрузит роли пользователей, имена которых содержат строку "admin"
+            return new RoleStorage(session, model).addRealmRolesForUsers(search.substring(7));
         }
         TypedQuery<UserEntity> query = em.createNamedQuery("searchForUser", UserEntity.class);
         query.setParameter("search", "%" + search.toLowerCase() + "%");

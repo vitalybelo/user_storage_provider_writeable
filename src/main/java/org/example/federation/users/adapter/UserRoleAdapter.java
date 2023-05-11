@@ -17,9 +17,9 @@ public class UserRoleAdapter implements RoleModel {
 
     public UserRoleAdapter(KeycloakSession session, RealmModel realm, ComponentModel model, UserRoleEntity entity) {
         this.session = session;
-        this.entity = entity;
         this.realm = realm;
         this.model = model;
+        this.entity = entity;
     }
 
     @Override

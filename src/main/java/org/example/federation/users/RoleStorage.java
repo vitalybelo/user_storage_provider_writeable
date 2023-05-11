@@ -1,8 +1,8 @@
 package org.example.federation.users;
 
-import io.smallrye.mutiny.tuples.Functions;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.example.federation.users.adapter.UserAdapter;
 import org.example.federation.users.model.UserEntity;
 import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.component.ComponentModel;
@@ -12,10 +12,8 @@ import org.keycloak.models.*;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import java.sql.Timestamp;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Set;
 
 @Slf4j
 public class RoleStorage {
@@ -110,14 +108,22 @@ public class RoleStorage {
     }
 
     /**
-     * Добавляет в рабочую область роли для пользователей. Список пользователей задается параметром маски
-     * поиска пользователей во внешнем jdbc хранилище. Если задан параметр "*", осуществляется считывание ролей для
-     * всех пользователей. В обратном случае, из внешнего хранилища выбираются пользователи, имена или почта которых
-     * содержит маску поиска.
-     * @param search строковая маска поиска пользователей, "*" для загрузки всех пользователей
+     * Добавляет в рабочую область пользовательские роли и проверяет сопоставление ролей для каждого из них.
+     * Отсутствующие в сопоставлении роли, добавляются автоматически. Метод загружает всех пользователей с ролями,
+     * либо только тех, имена которых подходят маске поиска в запросе.
+     * @param search строковая маска поиска
+     *               <ul>
+     *               <li>"*" - загрузка всех пользователей</li>
+     *               <li>"строка" - загрузка тех пользователей, имена или электронная почта которых содержит данный фрагмент
+     *               строки</li>
+     *
+     *               </ul>
      */
-    public void addRealmRolesForUsers(String search) {
+    public List<UserEntity> addRealmRolesForUsers(String search) {
 
+        if (search == null || search.isEmpty()) {
+            return Collections.emptyList();
+        }
         TypedQuery<UserEntity> query;
         if (search.equalsIgnoreCase("*")) {
             query = em.createNamedQuery("getAllUsers", UserEntity.class);
@@ -127,13 +133,13 @@ public class RoleStorage {
         }
         List<UserEntity> usersList = query.getResultList();
 
-        if (!usersList.isEmpty()) {
-            Set<UserRoleEntity> rolesList = new HashSet<>();
-            for (UserEntity user : usersList) {
-                rolesList.addAll(user.getRoleList());
-            }
-            addRealmRoles(rolesList);
+        // добавление и сопоставление всех найденных ролей в realm
+        for (UserEntity user : usersList) {
+            UserAdapter userAdapter = new UserAdapter(session, realm, model, user);
+            userAdapter.getRoleMappings();
         }
+
+        return usersList;
     }
 
     /**
@@ -171,10 +177,7 @@ public class RoleStorage {
      * @param entitySet список ролей (экземпляров класса UserRoleEntity) для загрузки в рабочую область (realm)
      */
     public void addRealmRoles(Set<UserRoleEntity> entitySet) {
-//        entitySet.forEach(this::addRealmRole);
-        for (UserRoleEntity userRole : entitySet) {
-            addRealmRole(userRole);
-        }
+        entitySet.forEach(this::addRealmRole);
     }
 
     /**
