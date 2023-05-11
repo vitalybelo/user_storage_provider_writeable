@@ -8,7 +8,7 @@ import org.keycloak.storage.UserStorageProviderFactory;
 @Slf4j
 public class CustomUserStorageProviderFactory implements UserStorageProviderFactory<CustomUserStorageProvider> {
 
-    public static final String PROVIDER_ID = "JDBC USER STORAGE PROVIDER";
+    public static final String PROVIDER_ID = "USER_STORAGE";
 
     @Override
     public CustomUserStorageProvider create(KeycloakSession session, ComponentModel model) {

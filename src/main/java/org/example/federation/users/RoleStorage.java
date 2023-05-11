@@ -1,5 +1,6 @@
 package org.example.federation.users;
 
+import io.smallrye.mutiny.tuples.Functions;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.example.federation.users.model.UserEntity;
@@ -145,14 +146,13 @@ public class RoleStorage {
 
         // пробуем получить роль из области
         String userRoleName = userRole.getName();
-        RoleModel realmRole = session.roles().getRealmRole(realm, userRoleName); //realm.getRole(userRoleName);
+        RoleModel realmRole = session.roles().getRealmRole(realm, userRoleName); // realm.getRole(userRoleName);
 
         // если роли нет в области = null, тогда создаем новую
         if (realmRole == null) {
 
             // добавляем роль с описанием в рабочую область (realm)
-            // realmRole = realm.addRole(userRoleName);
-            realmRole = session.roles().addRealmRole(realm, userRoleName);
+            realmRole = session.roles().addRealmRole(realm, userRoleName); // realm.addRole(userRoleName);
             realmRole.setDescription(userRole.getDescription());
 
             // добавляем права (таблица rights) если они назначены для роли
