@@ -3,6 +3,7 @@ package org.example.federation.users;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.RealmModel;
 import org.keycloak.storage.UserStorageProviderFactory;
 
 @Slf4j
@@ -16,17 +17,18 @@ public class CustomUserStorageProviderFactory implements UserStorageProviderFact
     }
 
     @Override
+    public void onCreate(KeycloakSession session, RealmModel realm, ComponentModel model) {
+        UserStorageProviderFactory.super.onCreate(session, realm, model);
+    }
+
+    @Override
     public String getId() {
         return PROVIDER_ID;
     }
 
     @Override
     public String getHelpText() {
-        return "JPA Example User Storage Provider";
-    }
-
-    @Override
-    public void close() {
+        return "VITOS User Storage Provider";
     }
 
 }
