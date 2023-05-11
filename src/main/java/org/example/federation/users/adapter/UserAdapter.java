@@ -320,7 +320,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
         for (UserRoleEntity userRole : entity.getRoleList())
         {
             // проверяем наличие роли в рабочей области, добавляем если нет
-            RoleModel realmRole = new RoleStorage(session, model).addRealmRole(userRole);
+            RoleModel realmRole = new RoleStorage(session, model).addRoleIntoRealm(userRole);
 
             // проверяем наличие сопоставления роли для пользователя
             Optional<RoleModel> optional = set.stream()

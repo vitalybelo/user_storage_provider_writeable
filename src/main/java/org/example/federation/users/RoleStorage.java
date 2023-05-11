@@ -104,7 +104,7 @@ public class RoleStorage {
      * каждой роли в рабочей области, и добавляет роль только если там ее нет.
      */
     public void addRealmRolesAll() {
-        addRealmRoles(findAllRoles());
+        addAllRoleIntoRealm(findAllRoles());
     }
 
     /**
@@ -148,7 +148,7 @@ public class RoleStorage {
      * @param userRole сущность роли из jdbc хранилища
      * @return модель роли из рабочей области
      */
-    public RoleModel addRealmRole(UserRoleEntity userRole) {
+    public RoleModel addRoleIntoRealm(UserRoleEntity userRole) {
 
         // пробуем получить роль из области
         String userRoleName = userRole.getName();
@@ -176,8 +176,8 @@ public class RoleStorage {
      * Метод предварительно проверяет наличие в realm каждой отдельной роли. Отсутствующие роли добавляются.
      * @param entitySet список ролей (экземпляров класса UserRoleEntity) для загрузки в рабочую область (realm)
      */
-    public void addRealmRoles(Set<UserRoleEntity> entitySet) {
-        entitySet.forEach(this::addRealmRole);
+    public void addAllRoleIntoRealm(Set<UserRoleEntity> entitySet) {
+        entitySet.forEach(this::addRoleIntoRealm);
     }
 
     /**
