@@ -18,13 +18,14 @@ public class CustomRoleProvider implements RoleProvider {
 
     @Override
     public RoleModel addRealmRole(RealmModel realm, String name) {
-        log.info("\n\n************************** YOU LUCKY ***************************\n");
+        log.info("************************** YOU LUCKY ***************************");
+        System.out.println("\n\n************************** YOU LUCKY ***************************\n");
         return RoleProvider.super.addRealmRole(realm, name);
     }
 
     @Override
     public RoleModel addRealmRole(RealmModel realm, String id, String name) {
-        log.info("\n\n************************** YOU LUCKY ***************************\n");
+        log.info("************************** YOU LUCKY ***************************");
         return null;
     }
 
