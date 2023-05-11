@@ -1,7 +1,7 @@
 package org.example.federation.users.adapter;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.federation.users.CustomRoleStorage;
+import org.example.federation.users.RoleStorage;
 import org.example.federation.users.model.UserEntity;
 import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.common.util.MultivaluedHashMap;
@@ -320,7 +320,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
         for (UserRoleEntity userRole : entity.getRoleList())
         {
             // проверяем наличие роли в рабочей области, добавляем если нет
-            RoleModel realmRole = new CustomRoleStorage(session, model).addRealmRole(userRole);
+            RoleModel realmRole = new RoleStorage(session, model).addRealmRole(userRole);
 
             // проверяем наличие сопоставления роли для пользователя
             Optional<RoleModel> optional = set.stream()
@@ -328,7 +328,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
 
             // если сопоставления нет, добавляем роль для пользователя
             if (optional.isEmpty()) {
-                log.info(">>>>> Добавлена роль {} (пользователя: {}) ", userRole.getName(), entity.getUsername());
+                log.info(">>>>> роль {} добавлена в REALM (для пользователя: {}) ", userRole.getName(), entity.getUsername());
                 grantRole(realmRole);
                 set.add(realmRole);
             }
@@ -406,7 +406,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
     @Override
     public void grantRole(RoleModel role) {
 
-        CustomRoleStorage roleStorage = new CustomRoleStorage(session, model);
+        RoleStorage roleStorage = new RoleStorage(session, model);
         UserRoleEntity userRoleEntity = roleStorage.findRoleByName(role.getName());
 
         if (userRoleEntity == null) {

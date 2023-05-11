@@ -17,14 +17,14 @@ import java.util.stream.Collectors;
 import java.util.Set;
 
 @Slf4j
-public class CustomRoleStorage {
+public class RoleStorage {
 
     protected EntityManager em;
     protected RealmModel realm;
     protected ComponentModel model;
     protected KeycloakSession session;
 
-    public CustomRoleStorage(KeycloakSession session, ComponentModel model) {
+    public RoleStorage(KeycloakSession session, ComponentModel model) {
         this.model = model;
         this.session = session;
         this.realm = session.getContext().getRealm();
@@ -151,7 +151,8 @@ public class CustomRoleStorage {
         if (realmRole == null) {
 
             // добавляем роль с описанием в рабочую область (realm)
-            realmRole = session.roles().addRealmRole(realm, userRoleName); //realm.addRole(userRoleName);
+            // realmRole = realm.addRole(userRoleName);
+            realmRole = session.roles().addRealmRole(realm, userRoleName);
             realmRole.setDescription(userRole.getDescription());
 
             // добавляем права (таблица rights) если они назначены для роли

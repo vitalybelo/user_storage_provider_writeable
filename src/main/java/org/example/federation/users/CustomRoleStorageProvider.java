@@ -3,16 +3,12 @@ package org.example.federation.users;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.models.*;
-import org.keycloak.storage.role.RoleLookupProvider;
 import org.keycloak.storage.role.RoleStorageProvider;
-
 import java.util.stream.Stream;
 
 @Slf4j
-public class CustomRoleStorageProvider implements
-        RoleStorageProvider,
-        RoleLookupProvider
-{
+public class CustomRoleStorageProvider implements RoleStorageProvider {
+
     protected ComponentModel model;
     protected KeycloakSession session;
 
@@ -41,7 +37,7 @@ public class CustomRoleStorageProvider implements
     @Override
     public Stream<RoleModel> searchForRolesStream(RealmModel realm, String search, Integer first, Integer max) {
         System.out.println("\n\n************************** YOU LUCKY ***************************\n");
-        return null;
+        return Stream.empty();
     }
 
     @Override
@@ -53,8 +49,7 @@ public class CustomRoleStorageProvider implements
     @Override
     public Stream<RoleModel> searchForClientRolesStream(ClientModel client, String search, Integer first, Integer max) {
         System.out.println("\n\n************************** YOU LUCKY ***************************\n");
-        return null;
+        return Stream.empty();
     }
-
 
 }
