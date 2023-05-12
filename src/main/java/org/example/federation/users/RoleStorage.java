@@ -103,7 +103,7 @@ public class RoleStorage {
      * Затем передаёт эту коллекцию в процедуру AddRolesToRealm(), которая последовательно проверяет наличие
      * каждой роли в рабочей области, и добавляет роль только если там ее нет.
      */
-    public void addRealmRolesAll() {
+    public void addAllRoleIntoRealm() {
         addAllRoleIntoRealm(findAllRoles());
     }
 

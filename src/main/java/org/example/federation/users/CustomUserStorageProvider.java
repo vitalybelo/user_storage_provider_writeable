@@ -21,7 +21,6 @@ import org.keycloak.storage.user.*;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import java.sql.Timestamp;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -206,7 +205,7 @@ public class CustomUserStorageProvider implements
     @Override
     public boolean removeUser(RealmModel realm, UserModel userModel) {
 
-        // если true - не удаляем пользователя из физического хранилища, устанавливаем ему статус DELETE
+        // не удаляем пользователя из хранилища, только устанавливаем ему статус DELETE
         if (SIMULATION_DELETE_ACTION) {
             userModel.setEnabled(false);
             return true;
