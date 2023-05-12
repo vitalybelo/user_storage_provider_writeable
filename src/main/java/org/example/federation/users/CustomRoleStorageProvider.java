@@ -57,7 +57,6 @@ public class CustomRoleStorageProvider implements
         return Stream.empty();
     }
 
-
     @Override
     public RoleModel addRealmRole(RealmModel realm, String name) {
 

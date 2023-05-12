@@ -47,6 +47,13 @@ public class UserRoleAdapter implements RoleModel {
         return entity.getName();
     }
 
+    public UserRoleEntity getEntity() {
+        return entity;
+    }
+
+    public UserRoleAdapter getRoleAdapter(RoleModel role) {
+        return (UserRoleAdapter)role;
+    }
 
     @Override
     public boolean isComposite() {

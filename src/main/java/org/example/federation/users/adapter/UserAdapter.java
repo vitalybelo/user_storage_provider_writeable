@@ -282,10 +282,10 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
      */
     @Override
     protected Set<RoleModel> getRoleMappingsInternal() {
-//        if (entity.getRoleList() != null) {
-//            return entity.getRoleList().stream()
-//                    .map(userRole -> new UserRoleAdapter(session, realm, model, userRole)).collect(Collectors.toSet());
-//        }
+// if (entity.getRoleList() != null) {
+//     return entity.getRoleList().stream()
+//             .map(userRole -> new UserRoleAdapter(session, realm, model, userRole)).collect(Collectors.toSet());
+// }
         return Collections.emptySet();
     }
 
@@ -311,12 +311,12 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
     @Override
     public Set<RoleModel> getRoleMappings() {
 
-        // следующее действие - стандартная реализация метода getRoleMappings()
+        // следующая строчка = стандартная реализация метода getRoleMappings()
         Set<RoleModel> set = new HashSet<>(getFederatedRoleMappings());
 
         // здесь начинается кастомный метод сопоставления списка ролей хранилища и списка ролей keycloak
         // ---------------------------------------------------------------------------------------------
-        log.info(">>>> GET_ROLE_MAPPING :: проверка сопоставление ролей для: {}", entity.getUsername());
+        log.info(">>>> getRoleMappings() :: проверка сопоставление ролей для: {}", entity.getUsername());
         for (UserRoleEntity userRole : entity.getRoleList())
         {
             // проверяем наличие роли в рабочей области, добавляем если нет
@@ -336,12 +336,10 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
         // ------------------------------------------------------------------------------------------------
         // здесь заканчивается кастомный метод сопоставления списка ролей хранилища и списка ролей keycloak
 
-        // следующие действия - стандартная реализация метода getRoleMappings()
-        // добавление стандартных и композитных ролей назначенных пользователю из области, если они есть
+        // всё что видите ниже = стандартная реализация метода getRoleMappings()
         if (appendDefaultRolesToRoleMappings()) {
             set.addAll(realm.getDefaultRole().getCompositesStream().collect(Collectors.toSet()));
         }
-        // добавление пользователю внутренних ролей (простое добавление ролей федеративных пользователей)
         set.addAll(getRoleMappingsInternal());
         return set;
     }
@@ -417,7 +415,15 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
         super.grantRole(role);
     }
 
+    @Override
+    public boolean hasRole(RoleModel role) {
+        return super.hasRole(role);
+    }
 
+    @Override
+    public boolean hasDirectRole(RoleModel role) {
+        return super.hasDirectRole(role);
+    }
 
 
 }
