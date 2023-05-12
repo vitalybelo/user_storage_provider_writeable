@@ -316,7 +316,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
 
         // здесь начинается кастомный метод сопоставления списка ролей хранилища и списка ролей keycloak
         // ---------------------------------------------------------------------------------------------
-        log.info(">>>> getRoleMappings() :: проверка сопоставление ролей для: {}", entity.getUsername());
+        log.info(">>>> getRoleMappings() :: проверка сопоставление ролей для: \"{}\"", entity.getUsername());
         for (UserRoleEntity userRole : entity.getRoleList())
         {
             // проверяем наличие роли в рабочей области, добавляем если нет
@@ -328,7 +328,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
 
             // если сопоставления нет, добавляем роль для пользователя
             if (optional.isEmpty()) {
-                log.info(">>>>> роль {} добавлена в REALM (для пользователя: {}) ", userRole.getName(), entity.getUsername());
+                log.info(">>>>> getRoleMappings() :: роль \"{}\" добавлена в realm для: \"{}\") ", userRole.getName(), entity.getUsername());
                 grantRole(realmRole);
                 set.add(realmRole);
             }
