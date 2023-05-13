@@ -21,6 +21,7 @@ import org.keycloak.storage.user.*;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -369,14 +370,6 @@ public class CustomUserStorageProvider implements
     }
 
     /**
-     * Читает из федеративного jdbc хранилища данные всех пользователей в модели UserEntity
-     * @return - коллекцию класса UserEntity, содержащую данные всех пользователей федеративного хранилища
-     */
-    public List<UserEntity> findAllUsers() {
-        return findAllUsers(-1, -1);
-    }
-
-    /**
      * Читает из федеративного jdbc хранилища данные пользователей в модели UserEntity
      * @param firstResult сдвиг в списке для начала чтения
      * @param maxResults максимальное количество данных для чтения
@@ -409,18 +402,14 @@ public class CustomUserStorageProvider implements
      */
     public List<UserEntity> findUsers(String search, int firstResult, int maxResults) {
 
-        if (search.equalsIgnoreCase("*"))
-        {
+        if (search.equalsIgnoreCase("*")) {
             // загрузка всех пользователей из внешнего хранилища
             return findAllUsers(firstResult, maxResults);
         }
-        else if (search.startsWith("#roles#"))
-        {
-            // загрузка ролей для определенных пользователей в рабочую область
-            // формат строки такой: #roles#{маска}, где {маска} может быть любой не пустой
-            // - "*" - загрузит роли всех пользователей
-            // - "admin" - загрузит роли пользователей, имена которых содержат строку "admin"
-            return new RoleStorage(session, model).addRealmRolesForUsers(search.substring(7));
+        if (search.equalsIgnoreCase("***")) {
+            // загрузка всех ролей и их атрибутов в рабочую область
+            new RoleStorage(session, model).addAllRoles();
+            return Collections.emptyList();
         }
         TypedQuery<UserEntity> query = em.createNamedQuery("searchForUser", UserEntity.class);
         query.setParameter("search", "%" + search.toLowerCase() + "%");
@@ -486,7 +475,7 @@ public class CustomUserStorageProvider implements
      */
     @Override
     public Stream<UserModel> searchForUserStream(RealmModel realm, Map<String, String> params) {
-        return findAllUsers().stream()
+        return findAllUsers(-1, -1).stream()
                 .map(user -> new UserAdapter(session, realm, model, user));
     }
 

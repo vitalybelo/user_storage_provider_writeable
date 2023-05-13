@@ -1,8 +1,10 @@
 package org.example.federation.users;
 
+import com.arjuna.ats.jta.cdi.RunnableWithException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.example.federation.users.adapter.UserAdapter;
+import org.example.federation.users.adapter.UserRoleAdapter;
 import org.example.federation.users.model.UserEntity;
 import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.component.ComponentModel;
@@ -39,21 +41,9 @@ public class RoleStorage {
     public Set<UserRoleEntity> findAllRoles(int firstResult, int maxResults) {
 
         TypedQuery<UserRoleEntity> query = em.createNamedQuery("getAllRoles", UserRoleEntity.class);
-        if (firstResult != -1) {
-            query.setFirstResult(firstResult);
-        }
-        if (maxResults != -1) {
-            query.setMaxResults(maxResults);
-        }
-        return query.getResultStream().collect(Collectors.toSet());
-    }
-
-    /**
-     * Считывает из внешнего хранилища все имеющиеся роли
-     * @return список ролей из внешнего jdbc хранилища (коллекцию экземпляров класса UserRoleEntity)
-     */
-    public Set<UserRoleEntity> findAllRoles() {
-        return findAllRoles(-1, -1);
+        if (firstResult != -1) query.setFirstResult(firstResult);
+        if (maxResults != -1) query.setMaxResults(maxResults);
+        return new LinkedHashSet<>(query.getResultList());
     }
 
     /**
@@ -70,12 +60,8 @@ public class RoleStorage {
         }
         TypedQuery<UserRoleEntity> query = em.createNamedQuery("searchForRoles", UserRoleEntity.class);
         query.setParameter("search", "%" + search.toLowerCase() + "%");
-        if (firstResult != -1) {
-            query.setFirstResult(firstResult);
-        }
-        if (maxResults != -1) {
-            query.setMaxResults(maxResults);
-        }
+        if (firstResult != -1) query.setFirstResult(firstResult);
+        if (maxResults != -1) query.setMaxResults(maxResults);
         return query.getResultStream().collect(Collectors.toSet());
     }
 
@@ -103,43 +89,8 @@ public class RoleStorage {
      * Затем передаёт эту коллекцию в процедуру AddRolesToRealm(), которая последовательно проверяет наличие
      * каждой роли в рабочей области, и добавляет роль только если там ее нет.
      */
-    public void addAllRoleIntoRealm() {
-        addAllRoleIntoRealm(findAllRoles());
-    }
-
-    /**
-     * Добавляет в рабочую область пользовательские роли и проверяет сопоставление ролей для каждого из них.
-     * Отсутствующие в сопоставлении роли, добавляются автоматически. Метод загружает всех пользователей с ролями,
-     * либо только тех, имена которых подходят маске поиска в запросе.
-     * @param search строковая маска поиска
-     *               <ul>
-     *               <li>"*" - загрузка всех пользователей</li>
-     *               <li>"строка" - загрузка тех пользователей, имена или электронная почта которых содержит данный фрагмент
-     *               строки</li>
-     *
-     *               </ul>
-     */
-    public List<UserEntity> addRealmRolesForUsers(String search) {
-
-        if (search == null || search.isEmpty()) {
-            return Collections.emptyList();
-        }
-        TypedQuery<UserEntity> query;
-        if (search.equalsIgnoreCase("*")) {
-            query = em.createNamedQuery("getAllUsers", UserEntity.class);
-        } else {
-            query = em.createNamedQuery("searchForUser", UserEntity.class);
-            query.setParameter("search", "%" + search.toLowerCase() + "%");
-        }
-        List<UserEntity> usersList = query.getResultList();
-
-        // добавление и сопоставление всех найденных ролей в realm
-        for (UserEntity user : usersList) {
-            UserAdapter userAdapter = new UserAdapter(session, realm, model, user);
-            userAdapter.getRoleMappings();
-        }
-
-        return usersList;
+    public void addAllRoles() {
+        addAllRoleIntoRealm(findAllRoles(-1, -1));
     }
 
     /**
@@ -154,18 +105,30 @@ public class RoleStorage {
         String userRoleName = userRole.getName();
         RoleModel realmRole = session.roles().getRealmRole(realm, userRoleName); // realm.getRole(userRoleName);
 
-        // если роли нет в области = null, тогда создаем новую
+        // роли нет в области = null, создаем
         if (realmRole == null) {
 
-            // добавляем роль с описанием в рабочую область (realm)
+            // добавляем роль с описанием в realm
             realmRole = session.roles().addRealmRole(realm, userRoleName); // realm.addRole(userRoleName);
             realmRole.setDescription(userRole.getDescription());
 
             // добавляем права (таблица rights) если они назначены для роли
-            if (!userRole.getRightsList().isEmpty()) {
-                RoleModel finalRealmRole = realmRole;
-                userRole.getRightsList()
-                        .forEach(r -> finalRealmRole.setSingleAttribute(r.getKeyName(), r.getValueName()));
+            if (!userRole.getRightsList().isEmpty())
+            {
+                RoleModel role = realmRole;
+                userRole.getRightsList().forEach(right ->
+                {
+                    // поля атрибутов ролей keycloak имеют ограничения = varchar255 :: нормализуем
+                    String key = right.getKeyName();
+                    String value = right.getValueName();
+                    if (key != null && key.length() > 255) {
+                        key = key.substring(0, 255);
+                    }
+                    if (value != null && value.length() > 255) {
+                        value = value.substring(0, 255);
+                    }
+                    role.setSingleAttribute(key, value);
+                });
             }
         }
         return realmRole;
