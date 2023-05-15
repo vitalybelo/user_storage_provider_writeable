@@ -8,6 +8,7 @@ import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.credential.LegacyUserCredentialManager;
 import org.keycloak.models.*;
+import org.keycloak.models.utils.RepresentationToModel;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.adapter.AbstractUserAdapterFederatedStorage;
 
@@ -319,19 +320,24 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
         log.info(">>>> getRoleMappings() :: проверка сопоставление ролей для: \"{}\"", entity.getUsername());
         for (UserRoleEntity userRole : entity.getRoleList())
         {
-            // проверяем наличие роли в рабочей области, добавляем если нет
-            RoleModel realmRole = new RoleStorage(session, model).addRoleIntoRealm(userRole);
+            UserRoleRepresentation newRole = new UserRoleRepresentation(session, userRole);
+            new RepresentationToModel();
+            RoleModel roleModel = RepresentationToModel.createRole(realm, newRole);
+            set.add(roleModel);
 
-            // проверяем наличие сопоставления роли для пользователя
-            Optional<RoleModel> optional = set.stream()
-                    .filter(realm_role -> realm_role.getName().equals(userRole.getName())).findFirst();
-
-            // если сопоставления нет, добавляем роль для пользователя
-            if (optional.isEmpty()) {
-                log.info(">>>>> getRoleMappings() :: роль \"{}\" добавлена в realm для: \"{}\") ", userRole.getName(), entity.getUsername());
-                grantRole(realmRole);
-                set.add(realmRole);
-            }
+//            // проверяем наличие роли в рабочей области, добавляем если нет
+//            RoleModel realmRole = new RoleStorage(session, model).addRoleIntoRealm(userRole);
+//
+//            // проверяем наличие сопоставления роли для пользователя
+//            Optional<RoleModel> optional = set.stream()
+//                    .filter(realm_role -> realm_role.getName().equals(userRole.getName())).findFirst();
+//
+//            // если сопоставления нет, добавляем роль для пользователя
+//            if (optional.isEmpty()) {
+//                log.info(">>>>> getRoleMappings() :: роль \"{}\" добавлена в realm для: \"{}\") ", userRole.getName(), entity.getUsername());
+//                grantRole(realmRole);
+//                set.add(realmRole);
+//            }
         }
         // ------------------------------------------------------------------------------------------------
         // здесь заканчивается кастомный метод сопоставления списка ролей хранилища и списка ролей keycloak
