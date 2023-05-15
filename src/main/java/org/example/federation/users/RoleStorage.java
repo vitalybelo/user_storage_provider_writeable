@@ -1,11 +1,7 @@
 package org.example.federation.users;
 
-import com.arjuna.ats.jta.cdi.RunnableWithException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.example.federation.users.adapter.UserAdapter;
-import org.example.federation.users.adapter.UserRoleAdapter;
-import org.example.federation.users.model.UserEntity;
 import org.example.federation.users.model.UserRoleEntity;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
@@ -143,7 +139,7 @@ public class RoleStorage {
         entitySet.forEach(this::addRoleIntoRealm);
     }
 
-    /**
+        /**
      * Сохраняет роль во внешнем хранилище
      * @param role модель роли из рабочей области
      * @return экземпляр класса UserRoleEntity, сущность роли в jdbc хранилище
