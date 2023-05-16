@@ -320,10 +320,10 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
         log.info(">>>> getRoleMappings() :: проверка сопоставление ролей для: \"{}\"", entity.getUsername());
         for (UserRoleEntity userRole : entity.getRoleList())
         {
-            UserRoleRepresentation newRole = new UserRoleRepresentation(session, userRole);
-            new RepresentationToModel();
-            RoleModel roleModel = RepresentationToModel.createRole(realm, newRole);
-            set.add(roleModel);
+//            UserRoleRepresentation newRole = new UserRoleRepresentation(session, userRole);
+//            new RepresentationToModel();
+//            RoleModel roleModel = RepresentationToModel.createRole(realm, newRole);
+//            set.add(roleModel);
 
 //            // проверяем наличие роли в рабочей области, добавляем если нет
 //            RoleModel realmRole = new RoleStorage(session, model).addRoleIntoRealm(userRole);
