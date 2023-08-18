@@ -23,12 +23,12 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
     private static final String ENABLED_TRUE = "ACTIVE";
     private static final String ENABLED_FALSE = "DELETED";
 
-    private static final String ATTRIBUTE_PHONE = "номер телефона";
-    private static final String ATTRIBUTE_MIDDLE_NAME = "отчество";
-    private static final String ATTRIBUTE_DEPARTMENT = "подразделение";
-    private static final String ATTRIBUTE_POSITION = "должность";
-    private static final String ATTRIBUTE_IP_ADDRESS = "IP адрес";
-    private static final String ATTRIBUTE_BANNER_VIEWED = "показ баннера безопасности";
+    private static final String ATTRIBUTE_PHONE = "phone"; //"номер телефона";
+    private static final String ATTRIBUTE_MIDDLE_NAME = "middle_name"; //"отчество";
+    private static final String ATTRIBUTE_DEPARTMENT = "department"; //"подразделение";
+    private static final String ATTRIBUTE_POSITION = "position"; //"должность";
+    private static final String ATTRIBUTE_IP_ADDRESS = "ip_address"; //"IP адрес";
+    private static final String ATTRIBUTE_BANNER_VIEWED = "banner_viewed"; //"показ баннера безопасности";
 
     protected UserEntity entity;
     protected String keycloakId;
@@ -322,7 +322,7 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage
             // проверяем наличие роли в рабочей области, добавляем если нет
             RoleModel realmRole = new RoleStorage(session, model).addRoleIntoRealm(userRole);
 
-            // проверяем наличие сопоставления роли для пользователя
+            // проверяем наличие сопоставления роли для пользователя (загружены из getFederatedRoleMappings())
             Optional<RoleModel> optional = set.stream()
                     .filter(realm_role -> realm_role.getName().equals(userRole.getName())).findFirst();
 
